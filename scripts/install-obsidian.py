@@ -475,6 +475,14 @@ def main(argv=None):
         raise ValueError('Agent config changed during installation; no MCP config written, retry')
     for path, text, _ in plans:
         save(path, text)
+    prompts = set()
+    if 'codex' in targets:
+        prompts.add(codex_home / 'AGENTS.md')
+    if 'agy' in targets or 'gemini' in targets:
+        prompts.add(home / '.gemini/GEMINI.md')
+    for path in sorted(prompts):
+        run(sys.executable, ROOT / 'scripts/merge-prompt.py', ROOT / 'obsidian/AGENTS.md',
+            path, '--block-name', 'scrooge-obsidian')
     save(data_dir / 'installation.json', json.dumps({'vault': str(vault), 'repo': str(repo),
          'mcpvault': MCP_VERSION, 'dataweave_base': REVISION, 'targets': targets}, indent=2) + '\n')
     print('[obsidian] Verified and configured. Restart selected agents; preview/approve destructive operations.')

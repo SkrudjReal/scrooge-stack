@@ -5,6 +5,7 @@ param(
     [switch]$DryRun,
     [switch]$SkipXerj,
     [switch]$SkipObsidian,
+    [switch]$OnlyObsidian,
     [string]$ObsidianVault = '',
     [string]$ObsidianRepo = '',
     [switch]$ObsidianWrite,
@@ -107,6 +108,28 @@ function WritePrompt([string]$Destination) {
     New-Item -ItemType Directory -Path (Split-Path $Destination -Parent) -Force | Out-Null
     Backup $Destination
     [IO.File]::WriteAllText($Destination, $New, (New-Object Text.UTF8Encoding($false)))
+}
+
+function InstallObsidian {
+    $ObsidianArgs = @((Join-Path $Root 'scripts\install-obsidian.py'), '--targets', $Targets,
+        '--data-dir', (Join-Path $env:LOCALAPPDATA 'scrooge-stack\obsidian'))
+    if ($ObsidianVault) { $ObsidianArgs += @('--vault', $ObsidianVault) }
+    if ($ObsidianRepo) { $ObsidianArgs += @('--repo', $ObsidianRepo) }
+    if ($ObsidianWrite) { $ObsidianArgs += '--enable-writes' }
+    if ($DryRun) { Log ('[dry-run] Python 3.11+ ' + ($ObsidianArgs -join ' ') + ' --dry-run') }
+    else {
+        if (Available 'py') { & py -3 @ObsidianArgs }
+        elseif (Available 'python') { & python @ObsidianArgs }
+        else { throw 'Obsidian setup requires Python 3.11+ (py or python) and Node >=22.12 with npm' }
+        if ($LASTEXITCODE -ne 0) { throw 'Obsidian installation failed; global instructions/Choirboy not applied' }
+    }
+}
+
+if ($OnlyObsidian) {
+    if ($SkipObsidian) { throw '-OnlyObsidian conflicts with -SkipObsidian' }
+    Log "Obsidian-only setup for: $Targets (no other stack components)"
+    InstallObsidian
+    return
 }
 
 Log "Targets: $Targets (native Windows; WSL requires separate install.sh)"
@@ -331,20 +354,7 @@ if (HasTarget 'gemini') { CopySkill $Selector (Join-Path $HOME '.gemini\skills\a
 
 # 6. Same portable helper as Linux; native Python, no Bash or REST API required.
 Log '6/8 Obsidian (MCPVault + DataWeave + FTS5)'
-if (-not $SkipObsidian) {
-    $ObsidianArgs = @((Join-Path $Root 'scripts\install-obsidian.py'), '--targets', $Targets,
-        '--data-dir', (Join-Path $env:LOCALAPPDATA 'scrooge-stack\obsidian'))
-    if ($ObsidianVault) { $ObsidianArgs += @('--vault', $ObsidianVault) }
-    if ($ObsidianRepo) { $ObsidianArgs += @('--repo', $ObsidianRepo) }
-    if ($ObsidianWrite) { $ObsidianArgs += '--enable-writes' }
-    if ($DryRun) { Log ('[dry-run] Python 3.11+ ' + ($ObsidianArgs -join ' ') + ' --dry-run') }
-    else {
-        if (Available 'py') { & py -3 @ObsidianArgs }
-        elseif (Available 'python') { & python @ObsidianArgs }
-        else { throw 'Obsidian setup requires Python 3.11+ (py or python) and Node >=22.12 with npm' }
-        if ($LASTEXITCODE -ne 0) { throw 'Obsidian installation failed; global instructions/Choirboy not applied' }
-    }
-}
+if (-not $SkipObsidian) { InstallObsidian }
 
 # 7. Prompt first, Choirboy afterwards.
 Log '7/8 Global instructions'

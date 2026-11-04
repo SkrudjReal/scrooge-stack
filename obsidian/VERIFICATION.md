@@ -38,7 +38,7 @@ The retained fixture path is printed. No model generation or account login runs.
 
 ## Actual results
 
-- Linux unit suite: **30 tests passed**, including dry-run isolation, shell flag
+- Linux unit suite: **35 tests passed**, including dry-run isolation, shell flag
   forwarding, failure ordering, vault discovery/ambiguity, all three host config
   merges, malformed/conflicting config refusal, multiline TOML preservation,
   UTF-8/BOM/CRLF handling, backups and no silent vault creation.
@@ -86,10 +86,26 @@ for manual review; there is no reset, checkout of existing work, or silent pull.
 
 ## Limits
 
+The user's native Windows and WSL profiles were configured separately for AGY
+and Gemini. Both real vault backups verified 3,379 files, both FTS5 indexes
+contained 2,259 Markdown notes, and the temporary MCP/native probes passed in
+each environment. Existing MCP entries, hooks and instruction text were checked
+against private before-snapshots; Codex configuration stayed byte-identical.
+AGY `mcp list` discovers the enabled native-path server on both hosts. The new
+standalone Obsidian instruction block and both host skill copies were verified.
+The final Linux isolated install/reinstall also passed with instruction merging.
+
+Initial AGY model-driven read attempts timed out after 70 seconds. A WSL retry
+with `gemini-3.8-flash-low` in the default execution mode succeeded and returned
+the 11 Markdown files in the requested directory. Plan mode only generated an
+approval plan. Native Windows retries timed out without a result, including
+with the explicit model; server discovery and direct stdio tests do not prove
+that model-driven client path. Gemini CLI is absent on both profiles, so its
+config is ready but a live Gemini client call was not tested.
+
 Full installation of every other Scrooge component on a real Windows user profile
 was not repeated. Live model atomization/Wiki compilation, account integrations,
-interactive IDE reload, and real AGY/Gemini MCP client calls are not part of these
-installer tests. Native processing/formatting and transport are verified; model
+and interactive IDE reload were not verified. Native processing/formatting and transport are verified; model
 quality and remote account access remain separate. Native scripts need an already
 installed Codex for their `--backend codex` LLM step.
 

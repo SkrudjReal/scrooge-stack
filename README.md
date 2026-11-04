@@ -68,6 +68,18 @@ On Linux/WSL, the installer clones missing Oh My Zsh and the two plugins, then u
 
 ## Obsidian knowledge integration
 
+To add only Obsidian to an existing setup, without reinstalling other stack components:
+
+```bash
+bash install.sh --only-obsidian --targets agy,gemini --obsidian-vault "$HOME/Documents/My Vault" --obsidian-write
+```
+
+```powershell
+.\install.ps1 -OnlyObsidian -Targets 'agy,gemini' -ObsidianVault 'C:\Users\you\Documents\My Vault' -ObsidianWrite
+```
+
+This mode requires the Obsidian prerequisites below, but does not require the selected agent CLI to be installed yet. Omit the write flag for read-only setup. Run each command in its native environment; Windows and WSL need separate installations.
+
 Both installers call the same [Python helper](scripts/install-obsidian.py), so native Windows needs no Bash. It discovers an existing vault from the configured Codex MCP path, Obsidian's vault registry or common Documents locations (including WSL-mounted Windows profiles). It does not recursively search the whole disk or create a new vault. If none is found it skips this component with a rerun instruction; multiple candidates require `--obsidian-vault` / `-ObsidianVault`.
 
 MCPVault is pinned to npm **0.18.3** and installed into Scrooge's user data directory. New DataWeave checkouts use official upstream commit `ddc40c68941d66943824c668ed192aced866fce8`, plus reviewed [integration](obsidian/dataweave.patch), [portable-path](obsidian/dataweave-portable-paths.patch) and [Windows YAML](obsidian/dataweave-windows-yaml.patch) patches and their regression tests. The patch prunes inaccessible/system caches before vault traversal, avoids external symlinks during scans, contains generated note destinations within the vault, supplies the required atom-plan JSON contract, normalizes stored relative paths across OSes and escapes Windows source paths in YAML. It includes no personal notes, paths or credentials. Existing checkouts are reused without checkout/reset/pull; an incompatible patch or unexpected origin stops safely. Upstream attribution is retained in [DATAWEAVE-LICENSE](obsidian/DATAWEAVE-LICENSE).
@@ -77,6 +89,8 @@ DataWeave defaults to `~/projects/mainstream/ObsidianDataWeave`; choose an exist
 The helper registers one `mcpvault` stdio server for selected hosts, preserving other MCP entries: Codex `~/.codex/config.toml` (or CODEX_HOME), AGY `~/.gemini/config/mcp_config.json`, Gemini `~/.gemini/settings.json`. A compatible existing MCP entry is retained, including already-authorized write access. A conflicting server stops installation. Config changes get timestamped backups. Eleven read tools are automatically approved for new Codex entries; mutations retain Codex confirmation. AGY/Gemini retain their host's normal approval policy.
 
 The generated `obsidian-dataweave-codex` skill in each selected host's skills directory records machine-specific vault/repo/venv paths and supports all nine knowledge workflows: source-backed search and summary, research saving, atomization, MOCs, related notes, duplicate previews, incremental FTS5 and Wiki compile/update. Existing user-authored skills are not overwritten; review them or skip this component if a conflict is reported. Native semantic rewrite/compile uses an already-installed Codex (`--backend codex`); AGY/Gemini can use interactive MCP and non-LLM plan/render/index workflows, but DataWeave has no agy/gemini rewrite backend.
+
+The helper also merges a separate `scrooge-obsidian` instruction block into Codex `AGENTS.md` and/or shared `~/.gemini/GEMINI.md`. Existing instructions, including the full-stack block, are preserved; reruns update only the Obsidian block.
 
 **Safety:** new installations are read-only. Explicit write enablement first runs real stdio and native DataWeave probes against temporary vaults, then copies and SHA-256 verifies the selected vault before changing MCP args. Snapshots are under `<obsidian-data>/backups/`; `.smart-env`, `.git` and `.trash` are excluded, symlinks are preserved without following them, and the sibling manifest records hashes/exclusions. A later ordinary rerun preserves previously enabled writes and does not produce another backup. Before later bulk work, make a fresh backup and obtain explicit approval after a path/link-impact preview. Agent instructions are not an OS sandbox around trusted MCP clients.
 

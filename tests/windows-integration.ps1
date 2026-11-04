@@ -6,6 +6,7 @@ $OldHome = $HOME
 $OldLocalAppData = $env:LOCALAPPDATA
 $OldCodexHome = $env:CODEX_HOME
 function global:git {
+    $global:ScroogeGitCalls++
     if ($args[0] -eq '-C') {
         $global:LASTEXITCODE = 0
         return [IO.File]::ReadAllText((Join-Path $args[1] '.mock-origin'))
@@ -30,6 +31,7 @@ function global:graphify {
 }
 function global:agy { $global:LASTEXITCODE = 0; 'deploychan http'; 'xerj stdio' }
 try {
+    $global:ScroogeGitCalls = 0
     Set-Variable HOME -Value (Join-Path $TestRoot 'home') -Force
     $env:LOCALAPPDATA = Join-Path $HOME 'AppData\Local'
     $env:CODEX_HOME = $null
@@ -55,6 +57,10 @@ try {
     function global:py { $global:ObsidianTestArgs = @($args); $global:LASTEXITCODE = 0 }
     & (Join-Path $Root 'install.ps1') -Targets agy -SkipXerj -ObsidianVault 'C:\Vault with spaces' -ObsidianRepo 'C:\Repo with spaces' -ObsidianWrite
     if (-not ($global:ObsidianTestArgs -contains 'C:\Vault with spaces') -or -not ($global:ObsidianTestArgs -contains 'C:\Repo with spaces') -or -not ($global:ObsidianTestArgs -contains '--enable-writes')) { throw 'Obsidian flag forwarding failed' }
+    $BeforeGit = $global:ScroogeGitCalls
+    & (Join-Path $Root 'install.ps1') -OnlyObsidian -Targets 'agy,gemini' -ObsidianVault 'C:\Vault with spaces'
+    if ($global:ScroogeGitCalls -ne $BeforeGit) { throw 'Obsidian-only setup ran other components' }
+    if (-not ($global:ObsidianTestArgs -contains 'agy,gemini')) { throw 'Obsidian-only target forwarding failed' }
     function global:py { $global:LASTEXITCODE = 7 }
     $Failed = $false
     try { & (Join-Path $Root 'install.ps1') -Targets agy -SkipXerj } catch { $Failed = $_.ToString().Contains('Obsidian installation failed') }

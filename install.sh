@@ -10,13 +10,14 @@ CHOIRBOY_SOURCE=""
 SKIP_XERJ=0
 SKIP_ZSH=0
 SKIP_OBSIDIAN=0
+ONLY_OBSIDIAN=0
 OBSIDIAN_VAULT=""
 OBSIDIAN_REPO=""
 OBSIDIAN_WRITE=0
 URL="https://mcp.deploychan.webcam/mcp"
 
 usage() {
-  echo "Usage: bash install.sh [--targets codex,agy,gemini] [--dry-run] [--skip-xerj] [--skip-zsh] [--skip-obsidian] [--obsidian-vault DIR] [--obsidian-repo DIR] [--obsidian-write] [--choirboy-source DIR]"
+  echo "Usage: bash install.sh [--targets codex,agy,gemini] [--dry-run] [--skip-xerj] [--skip-zsh] [--skip-obsidian] [--only-obsidian] [--obsidian-vault DIR] [--obsidian-repo DIR] [--obsidian-write] [--choirboy-source DIR]"
   echo "Choirboy is cloned last but NOT activated unless --choirboy-source points to an already-personalized checkout."
 }
 while (($#)); do
@@ -25,6 +26,7 @@ while (($#)); do
     --dry-run) DRY_RUN=1; shift;;
     --skip-xerj) SKIP_XERJ=1; shift;;
     --skip-zsh) SKIP_ZSH=1; shift;;
+    --only-obsidian) ONLY_OBSIDIAN=1; shift;;
     --skip-obsidian) SKIP_OBSIDIAN=1; shift;;
     --obsidian-vault) OBSIDIAN_VAULT="${2:?Missing vault directory}"; shift 2;;
     --obsidian-repo) OBSIDIAN_REPO="${2:?Missing DataWeave directory}"; shift 2;;
@@ -76,11 +78,30 @@ manual_skill() {
   fi
 }
 
+install_obsidian() {
+  obsidian_args=(--targets "$TARGETS" --data-dir "$DATA_DIR/obsidian")
+  if [[ -n "$OBSIDIAN_VAULT" ]]; then obsidian_args+=(--vault "$OBSIDIAN_VAULT"); fi
+  if [[ -n "$OBSIDIAN_REPO" ]]; then obsidian_args+=(--repo "$OBSIDIAN_REPO"); fi
+  if ((OBSIDIAN_WRITE)); then obsidian_args+=(--enable-writes); fi
+  if ((DRY_RUN)); then
+    execute python3 "$ROOT/scripts/install-obsidian.py" "${obsidian_args[@]}" --dry-run
+  else
+    python3 -c 'import sys; assert sys.version_info >= (3, 11), "Obsidian setup requires Python 3.11+"'
+    python3 "$ROOT/scripts/install-obsidian.py" "${obsidian_args[@]}" || warn 'Obsidian installation failed'
+  fi
+}
+
 IFS=',' read -r -a items <<< "$TARGETS"
 if ((${#items[@]} == 0)) || [[ "$TARGETS" == ,* || "$TARGETS" == *, || "$TARGETS" == *,,* ]]; then warn 'Select at least one valid target'; exit 2; fi
 for target in "${items[@]}"; do
   case "$target" in codex|agy|gemini) ;; *) warn "Invalid target: $target"; exit 2;; esac
 done
+if ((ONLY_OBSIDIAN)); then
+  if ((SKIP_OBSIDIAN)); then warn '--only-obsidian conflicts with --skip-obsidian'; exit 2; fi
+  say "Obsidian-only setup for: $TARGETS (does not install agent CLIs or other stack components)"
+  install_obsidian
+  exit 0
+fi
 say "Targets: $TARGETS; Windows and WSL are separate installations"
 for command in git python3 "${items[@]}"; do
   if ! command -v "$command" >/dev/null; then warn "Missing prerequisite: $command; install it and retry"; fi
@@ -340,18 +361,7 @@ fi
 
 # 8. Obsidian: existing vault only; local upstream stdio MCP, read-only by default.
 say '8/10 Obsidian (MCPVault + DataWeave + FTS5)'
-if (( ! SKIP_OBSIDIAN )); then
-  obsidian_args=(--targets "$TARGETS" --data-dir "$DATA_DIR/obsidian")
-  if [[ -n "$OBSIDIAN_VAULT" ]]; then obsidian_args+=(--vault "$OBSIDIAN_VAULT"); fi
-  if [[ -n "$OBSIDIAN_REPO" ]]; then obsidian_args+=(--repo "$OBSIDIAN_REPO"); fi
-  if ((OBSIDIAN_WRITE)); then obsidian_args+=(--enable-writes); fi
-  if ((DRY_RUN)); then
-    execute python3 "$ROOT/scripts/install-obsidian.py" "${obsidian_args[@]}" --dry-run
-  else
-    python3 -c 'import sys; assert sys.version_info >= (3, 11), "Obsidian setup requires Python 3.11+"'
-    python3 "$ROOT/scripts/install-obsidian.py" "${obsidian_args[@]}" || warn 'Obsidian installation failed'
-  fi
-fi
+if (( ! SKIP_OBSIDIAN )); then install_obsidian; fi
 
 # 9. Global instructions BEFORE Choirboy so its managed blocks are not overwritten.
 say "9/10 Global instructions"

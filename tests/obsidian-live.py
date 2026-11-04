@@ -31,10 +31,13 @@ with patch.object(Path, 'home', return_value=home), patch.dict(os.environ, {'COD
     obsidian.main(args + ['--enable-writes'])
     assert '--read-only' not in (codex / 'config.toml').read_text(encoding='utf-8')
     before = (codex / 'config.toml').read_bytes()
+    prompts = (home / '.gemini/GEMINI.md').read_bytes()
+    assert prompts.count(b'<!-- scrooge-obsidian:begin -->') == 1
     manifests = list((base / 'Knowledge Runtime/backups').glob('*.manifest.json'))
     assert len(manifests) == 1
     obsidian.main(args)
     assert (codex / 'config.toml').read_bytes() == before
+    assert (home / '.gemini/GEMINI.md').read_bytes() == prompts
     assert len(list((base / 'Knowledge Runtime/backups').glob('*.manifest.json'))) == 1
     assert (vault / 'Seed.md').read_text(encoding='utf-8') == seed
 print('LIVE read-only/write-backup/reinstall/native MCP+DataWeave checks PASSED', flush=True)

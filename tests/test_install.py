@@ -83,6 +83,33 @@ os.execv(sys.executable, [sys.executable, *sys.argv[1:]])
         self.assertNotIn('9/10 Global instructions', failed.stdout)
         self.assertNotIn('10/10 Choirboy', failed.stdout)
 
+    def test_only_obsidian_bypasses_other_clis_and_components(self):
+        self.mock('python3', '#!' + sys.executable + '''
+import json, os, pathlib, sys
+if len(sys.argv) > 1 and sys.argv[1] == '-c':
+ os.execv(sys.executable, [sys.executable, *sys.argv[1:]])
+assert pathlib.Path(sys.argv[1]).name == 'install-obsidian.py'
+(pathlib.Path(os.environ['HOME'])/'only-obsidian.json').write_text(json.dumps(sys.argv[2:]))
+''')
+        cmd = ['bash', str(ROOT / 'install.sh'), '--only-obsidian', '--targets', 'agy,gemini',
+               '--obsidian-vault', '/test/Vault with spaces']
+        result = subprocess.run(cmd, env=self.env, cwd=self.root, text=True, capture_output=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertNotIn('Ponytail', result.stdout)
+        self.assertNotIn('Choirboy', result.stdout)
+        self.assertFalse((self.home / '.local/share/scrooge-stack/sources').exists())
+        args = json.loads((self.home / 'only-obsidian.json').read_text())
+        self.assertEqual(args[args.index('--targets') + 1], 'agy,gemini')
+        conflict = subprocess.run(cmd + ['--skip-obsidian'], env=self.env, cwd=self.root, text=True, capture_output=True)
+        self.assertNotEqual(conflict.returncode, 0)
+
+    def test_only_obsidian_dry_run_never_invokes_helper(self):
+        self.mock('python3', '#!/bin/sh\ntouch "$HOME/unexpected-python"\nexit 1\n')
+        result = subprocess.run(['bash', str(ROOT / 'install.sh'), '--only-obsidian', '--targets', 'gemini', '--dry-run'],
+                                env=self.env, cwd=self.root, text=True, capture_output=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(list(self.home.iterdir()), [])
+
     def test_install_and_reinstall_preserve_configuration(self):
         config = self.home / '.gemini/config/mcp_config.json'
         config.parent.mkdir(parents=True)
