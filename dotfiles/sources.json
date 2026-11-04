@@ -1,0 +1,46 @@
+{
+  "snapshot_date": "2026-10-28",
+  "shojiwm": {
+    "repository": "https://github.com/howdeploy/ShojiWM",
+    "branch": "main",
+    "revision": "d78b72a4971068e37b31ea67dd2eff760fb04281",
+    "upstream": "https://github.com/bea4dev/ShojiWM",
+    "upstream_revision": "dcea1dd",
+    "pull_requests": [105, 106, 107, 108, 109, 122]
+  },
+  "walker": {
+    "repository": "https://github.com/abenz1267/walker",
+    "revision": "56c9e2b69e7d2b00f0f9481ae8c89f53810c1de5",
+    "version": "2.17.1",
+    "patch": "patches/walker/shoji.patch"
+  },
+  "shell_ancestry": {
+    "repository": "https://github.com/bea4dev/shoji-bar-3",
+    "revision": "1f9ca9309e6dbdec0a785bd6a86926a6406b4171",
+    "adapted_files": ["Dock.qml", "Media.qml"]
+  },
+  "wallpaper_engine": {
+    "repository": "https://github.com/Almamu/linux-wallpaperengine",
+    "revision": "b016d7d1fdcf4e5fd2f9c9fa420a8aaa07fee02d",
+    "media_patch_revision": "7f94c7739b83790c384ded3c03074763495eeb3a",
+    "media_pull_request": "https://github.com/Almamu/linux-wallpaperengine/pull/711",
+    "patches": ["patches/wallpaper-engine/existing-crop-upscale.patch", "patches/wallpaper-engine/engine-media-memory.patch"],
+    "mpv_repository": "https://github.com/mpv-player/mpv",
+    "mpv_revision": "41f6a645068483470267271e1d09966ca3b9f413",
+    "mpv_patch": "patches/wallpaper-engine/mpv-opengl-fence.patch",
+    "nvcodec_headers_repository": "https://github.com/FFmpeg/nv-codec-headers",
+    "nvcodec_headers_revision": "0a6fba9a2820628b8103464f4c8753ee05838baa"
+  },
+  "mateengine": {
+    "repository": "https://github.com/howdeploy/Mate-Engine-Plus",
+    "revision": "34136f2595925eb7dbf6ea9c5f7eb7c7ddc8c5a7"
+  },
+  "reference_runtime": {
+    "distribution": "Manjaro / Arch Linux family",
+    "quickshell": "0.3.1",
+    "qt": "6.11.2",
+    "elephant": "2.22.1",
+    "xwayland_satellite": "0.8.2",
+    "rust_for_shojiwm": "1.94.0"
+  }
+}

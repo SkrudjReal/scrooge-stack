@@ -1,0 +1,243 @@
+diff --git a/scripts/atomize.py b/scripts/atomize.py
+index 363217d..2e8592f 100644
+--- a/scripts/atomize.py
++++ b/scripts/atomize.py
+@@ -113,6 +113,16 @@ def assemble_prompt(
+ 
+     # Final instruction
+     lines.append("")
++    lines.append("## Required JSON output contract")
++    lines.append(
++        'Return {"notes": [...]} with exactly one note_type="moc" linking to every '
++        'atomic note. Every note must contain these keys: '
++        + ", ".join(sorted(REQUIRED_ATOM_FIELDS))
++        + '. Use unique string ids; note_type is atomic, moc or source; tags is a '
++        'list of 2-5 canonical tags; source_doc is the source_file verbatim; '
++        'date is the processing date YYYY-MM-DD; body is Markdown without YAML. '
++        'Preserve source meaning. Do not call tools or execute workflows: produce the plan only.'
++    )
+     lines.append(
+         "Produce the complete atom plan JSON now. Output ONLY the JSON, no prose."
+     )
+diff --git a/scripts/dedup_vault.py b/scripts/dedup_vault.py
+index c279391..7183cb2 100644
+--- a/scripts/dedup_vault.py
++++ b/scripts/dedup_vault.py
+@@ -31,7 +31,7 @@ try:
+     from scripts.atomize import extract_json, load_tags
+     from scripts.rewrite_backend import call_rewriter
+     from scripts.generate_notes import render_note_md, sanitize_filename
+-    from scripts.scan_vault import SKIP_DIRS
++    from scripts.scan_vault import SKIP_DIRS, iter_vault_notes
+     from scripts.vault_writer import (
+         get_vault_dest, load_registry, parse_frontmatter, save_registry,
+     )
+@@ -40,7 +40,7 @@ except ModuleNotFoundError:
+     from atomize import extract_json, load_tags
+     from rewrite_backend import call_rewriter
+     from generate_notes import render_note_md, sanitize_filename
+-    from scan_vault import SKIP_DIRS
++    from scan_vault import SKIP_DIRS, iter_vault_notes
+     from vault_writer import (
+         get_vault_dest, load_registry, parse_frontmatter, save_registry,
+     )
+@@ -86,7 +86,7 @@ def deep_scan_vault(vault_path: Path, folder: str | None = None) -> list[VaultNo
+         print(f"ERROR: Scan path does not exist: {scan_root}", file=sys.stderr)
+         sys.exit(1)
+ 
+-    for md_file in scan_root.rglob("*.md"):
++    for md_file in iter_vault_notes(scan_root):
+         # Skip excluded directories
+         rel = md_file.relative_to(vault_path)
+         if any(part in SKIP_DIRS for part in rel.parts):
+@@ -605,7 +605,7 @@ def update_wikilinks(
+     pattern = re.compile(r"\[\[(" + "|".join(escaped) + r")\]\]")
+ 
+     modified = 0
+-    for md_file in vault_path.rglob("*.md"):
++    for md_file in iter_vault_notes(vault_path):
+         rel = md_file.relative_to(vault_path)
+         if any(part in SKIP_DIRS for part in rel.parts):
+             continue
+diff --git a/scripts/memory_index.py b/scripts/memory_index.py
+index 5e9af0e..356c315 100644
+--- a/scripts/memory_index.py
++++ b/scripts/memory_index.py
+@@ -36,10 +36,10 @@ from pathlib import Path
+ 
+ try:
+     from scripts.config import load_config
+-    from scripts.scan_vault import SKIP_DIRS
++    from scripts.scan_vault import SKIP_DIRS, iter_vault_notes
+ except ModuleNotFoundError:
+     from config import load_config
+-    from scan_vault import SKIP_DIRS
++    from scan_vault import SKIP_DIRS, iter_vault_notes
+ 
+ try:
+     import yaml
+@@ -199,7 +199,7 @@ def parse_note(md_file: Path, vault_path: Path) -> dict:
+ def scan_files(vault_path: Path) -> dict[str, tuple[float, int]]:
+     """Map of rel-path → (mtime, size) for every indexable .md file."""
+     out: dict[str, tuple[float, int]] = {}
+-    for md_file in vault_path.rglob("*.md"):
++    for md_file in iter_vault_notes(vault_path):
+         rel = md_file.relative_to(vault_path)
+         if any(part in SKIP_DIRS for part in rel.parts):
+             continue
+diff --git a/scripts/process_contacts.py b/scripts/process_contacts.py
+index 7537077..2cf07cf 100644
+--- a/scripts/process_contacts.py
++++ b/scripts/process_contacts.py
+@@ -31,7 +31,7 @@ try:
+     from scripts.atomize import extract_json, load_tags, validate_tags, write_proposed_tags
+     from scripts.rewrite_backend import call_rewriter
+     from scripts.generate_notes import render_note_md, sanitize_filename
+-    from scripts.scan_vault import scan_vault
++    from scripts.scan_vault import scan_vault, iter_vault_notes
+     from scripts.vault_writer import (
+         get_vault_dest, load_registry, parse_frontmatter, save_registry,
+     )
+@@ -40,7 +40,7 @@ except ModuleNotFoundError:
+     from atomize import extract_json, load_tags, validate_tags, write_proposed_tags
+     from rewrite_backend import call_rewriter
+     from generate_notes import render_note_md, sanitize_filename
+-    from scan_vault import scan_vault
++    from scan_vault import scan_vault, iter_vault_notes
+     from vault_writer import (
+         get_vault_dest, load_registry, parse_frontmatter, save_registry,
+     )
+@@ -101,7 +101,7 @@ def find_existing_moc(
+         if candidate.exists() and _contained(candidate, vault_path):
+             return candidate
+ 
+-    for md_file in vault_path.rglob("*.md"):
++    for md_file in iter_vault_notes(vault_path):
+         rel_parts = md_file.relative_to(vault_path).parts
+         if any(part.startswith(".") for part in rel_parts):
+             continue
+@@ -155,7 +155,7 @@ def find_note(query: str, config: dict) -> Path | None:
+             return candidate
+ 
+     stem = query.removesuffix(".md")
+-    for md_file in vault_path.rglob("*.md"):
++    for md_file in iter_vault_notes(vault_path):
+         rel_parts = md_file.relative_to(vault_path).parts
+         if any(part.startswith(".") for part in rel_parts):
+             continue
+diff --git a/scripts/process_note.py b/scripts/process_note.py
+index f5db6bc..16127c4 100644
+--- a/scripts/process_note.py
++++ b/scripts/process_note.py
+@@ -36,7 +36,7 @@ try:
+     )
+     from scripts.rewrite_backend import call_rewriter
+     from scripts.generate_notes import render_note_md, sanitize_filename
+-    from scripts.scan_vault import scan_vault
++    from scripts.scan_vault import scan_vault, iter_vault_notes
+     from scripts.vault_writer import (
+         get_vault_dest, load_registry, parse_frontmatter, save_registry,
+     )
+@@ -48,7 +48,7 @@ except ModuleNotFoundError:
+     )
+     from rewrite_backend import call_rewriter
+     from generate_notes import render_note_md, sanitize_filename
+-    from scan_vault import scan_vault
++    from scan_vault import scan_vault, iter_vault_notes
+     from vault_writer import (
+         get_vault_dest, load_registry, parse_frontmatter, save_registry,
+     )
+@@ -103,7 +103,7 @@ def find_note(query: str, config: dict) -> Path | None:
+ 
+     # Recursive search by stem
+     stem = query.removesuffix(".md")
+-    for md_file in vault_path.rglob("*.md"):
++    for md_file in iter_vault_notes(vault_path):
+         # Skip hidden/system dirs
+         rel_parts = md_file.relative_to(vault_path).parts
+         if any(part.startswith(".") for part in rel_parts):
+diff --git a/scripts/rebuild_processed.py b/scripts/rebuild_processed.py
+index ac424bc..6d7567a 100644
+--- a/scripts/rebuild_processed.py
++++ b/scripts/rebuild_processed.py
+@@ -10,9 +10,11 @@ from pathlib import Path
+ 
+ try:
+     from scripts.config import REGISTRY_PATH, load_config
++    from scripts.scan_vault import iter_vault_notes
+     from scripts.vault_writer import parse_frontmatter
+ except ModuleNotFoundError:
+     from config import REGISTRY_PATH, load_config
++    from scan_vault import iter_vault_notes
+     from vault_writer import parse_frontmatter
+ 
+ 
+@@ -22,7 +24,7 @@ def rebuild_registry(vault_path: Path) -> dict[str, dict]:
+         lambda: {"source_doc": "", "date": "", "note_titles": []}
+     )
+ 
+-    for md_file in vault_path.rglob("*.md"):
++    for md_file in iter_vault_notes(vault_path):
+         try:
+             content = md_file.read_text(encoding="utf-8")
+         except OSError:
+diff --git a/scripts/scan_vault.py b/scripts/scan_vault.py
+index 30f3e89..02bdd9a 100644
+--- a/scripts/scan_vault.py
++++ b/scripts/scan_vault.py
+@@ -9,6 +9,7 @@ Diagnostics go to stderr.
+ 
+ import argparse
+ import json
++import os
+ import sys
+ from pathlib import Path
+ 
+@@ -21,6 +22,20 @@ except ModuleNotFoundError:
+ SKIP_DIRS = {".obsidian", ".trash", ".smart-env", ".archive", ".git"}
+ 
+ 
++def iter_vault_notes(vault_path: Path):
++    """Prune system directories before entering them; never follow symlinks."""
++    def fail(error):
++        raise error
++
++    for base, dirs, files in os.walk(vault_path, onerror=fail):
++        dirs[:] = [d for d in dirs if d not in SKIP_DIRS
++                   and not (Path(base) / d).is_symlink()]
++        for name in files:
++            path = Path(base) / name
++            if name.endswith(".md") and not path.is_symlink():
++                yield path
++
++
+ def load_config() -> dict:
+     """Strict config loader — vault_path required for scanning."""
+     return _load_config(strict=True)
+@@ -48,7 +63,7 @@ def scan_vault(vault_path: Path, exclude: set[str] | None = None) -> dict:
+     titles: list[str] = []
+     notes_by_folder: dict[str, list[str]] = {}
+ 
+-    for md_file in vault_path.rglob("*.md"):
++    for md_file in iter_vault_notes(vault_path):
+         # Skip files in excluded directories
+         if any(part in SKIP_DIRS for part in md_file.relative_to(vault_path).parts):
+             continue
+diff --git a/scripts/vault_writer.py b/scripts/vault_writer.py
+index 5a0b5fd..6d23753 100644
+--- a/scripts/vault_writer.py
++++ b/scripts/vault_writer.py
+@@ -454,9 +454,11 @@ def main() -> None:
+                 file=sys.stderr,
+             )
+             sys.exit(1)
+-        dest_dir.mkdir(parents=True, exist_ok=True)
+-
+         dest_path = dest_dir / md_file.name
++        if not dest_path.resolve().is_relative_to(Path(config["vault"]["vault_path"]).resolve()):
++            print(f"ERROR: destination escapes vault: {dest_path}", file=sys.stderr)
++            sys.exit(1)
++        dest_dir.mkdir(parents=True, exist_ok=True)
+         shutil.copy2(md_file, dest_path)
+ 
+         # Track for registry update

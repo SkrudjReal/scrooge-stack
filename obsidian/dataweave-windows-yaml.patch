@@ -1,0 +1,37 @@
+diff --git a/scripts/generate_notes.py b/scripts/generate_notes.py
+index 1bff845..cc92061 100644
+--- a/scripts/generate_notes.py
++++ b/scripts/generate_notes.py
+@@ -79,9 +79,8 @@ def render_note_md(note: dict) -> str:
+     # Build tags YAML list lines
+     tags_lines = "\n".join(f"  - {tag}" for tag in tags)
+ 
+-    # Double-quote source_doc; escape any embedded double-quotes
+-    source_doc_escaped = source_doc.replace('"', '\\"')
+-    source_doc_quoted = f'"{source_doc_escaped}"'
++    # JSON quoting is valid YAML and preserves Windows paths and newlines.
++    source_doc_quoted = json.dumps(source_doc, ensure_ascii=False)
+ 
+     content = (
+         "---\n"
+diff --git a/scripts/wiki_ingest.py b/scripts/wiki_ingest.py
+index 3663a4a..3dd24b7 100644
+--- a/scripts/wiki_ingest.py
++++ b/scripts/wiki_ingest.py
+@@ -27,6 +27,7 @@ Exit codes:
+ from __future__ import annotations
+ 
+ import argparse
++import json
+ import re
+ import subprocess
+ import sys
+@@ -94,7 +95,7 @@ def _build_raw_frontmatter(slug: str, label: str, source: str, today: str) -> st
+         f"wiki_project: {slug}\n"
+         "wiki_page_type: raw\n"
+         "wiki_status: ingested\n"
+-        f"raw_source: \"{source}\"\n"
++        f"raw_source: {json.dumps(source, ensure_ascii=False)}\n"
+         "---\n"
+         "\n"
+     )

@@ -1,0 +1,77 @@
+diff --git a/scripts/memory_index.py b/scripts/memory_index.py
+index 356c315..1e1a913 100644
+--- a/scripts/memory_index.py
++++ b/scripts/memory_index.py
+@@ -185,13 +185,13 @@ def parse_note(md_file: Path, vault_path: Path) -> dict:
+         title = f"{title} {h1.group(1).strip()}"
+ 
+     rel = md_file.relative_to(vault_path)
+-    folder = str(rel.parent) if str(rel.parent) != "." else "."
++    folder = rel.parent.as_posix()
+     return {
+         "title": title,
+         "headings": headings,
+         "tags": " ".join(tags),
+         "body": body,
+-        "path": str(rel),
++        "path": rel.as_posix(),
+         "folder": folder,
+     }
+ 
+@@ -207,7 +207,7 @@ def scan_files(vault_path: Path) -> dict[str, tuple[float, int]]:
+             stat = md_file.stat()
+         except OSError:
+             continue
+-        out[str(rel)] = (stat.st_mtime, stat.st_size)
++        out[rel.as_posix()] = (stat.st_mtime, stat.st_size)
+     return out
+ 
+ 
+diff --git a/scripts/scan_vault.py b/scripts/scan_vault.py
+index 02bdd9a..2aed5b8 100644
+--- a/scripts/scan_vault.py
++++ b/scripts/scan_vault.py
+@@ -77,7 +77,7 @@ def scan_vault(vault_path: Path, exclude: set[str] | None = None) -> dict:
+ 
+         # Group by relative parent folder
+         rel_parent = md_file.parent.relative_to(vault_path)
+-        folder_key = str(rel_parent) if str(rel_parent) != "." else "."
++        folder_key = rel_parent.as_posix()
+         if folder_key not in notes_by_folder:
+             notes_by_folder[folder_key] = []
+         notes_by_folder[folder_key].append(title)
+diff --git a/scripts/wiki_compile.py b/scripts/wiki_compile.py
+index c184029..f33a70e 100644
+--- a/scripts/wiki_compile.py
++++ b/scripts/wiki_compile.py
+@@ -143,7 +143,7 @@ def snapshot_wiki_space(root: Path) -> dict[str, Any]:
+     pages: dict[str, dict[str, Any]] = {}
+     existing_links: dict[str, list[str]] = {}
+     for md in root.rglob("*.md"):
+-        rel = str(md.relative_to(root))
++        rel = md.relative_to(root).as_posix()
+         try:
+             text = md.read_text(encoding="utf-8")
+         except OSError:
+@@ -373,7 +373,7 @@ def validate_changeset(cs: ChangeSet, snapshot: dict[str, Any]) -> None:
+     for page in cs.creates:
+         try:
+             dest_dir = get_vault_dest(WIKI_NOTE_TYPE, routing_config, page.frontmatter)
+-            dest_rel = str((dest_dir / Path(page.rel_path).name).relative_to(routing_root))
++            dest_rel = (dest_dir / Path(page.rel_path).name).relative_to(routing_root).as_posix()
+         except ValueError as exc:
+             errors.append(f"creates[{page.rel_path}]: {exc}")
+             continue
+diff --git a/scripts/wiki_lint.py b/scripts/wiki_lint.py
+index 36eb0b6..7b37db1 100644
+--- a/scripts/wiki_lint.py
++++ b/scripts/wiki_lint.py
+@@ -155,7 +155,7 @@ def _detect_mode(root: Path) -> str:
+ def _load_space(root: Path) -> WikiSpaceSnapshot:
+     snapshot = WikiSpaceSnapshot(slug=root.name, root=root, mode=_detect_mode(root))
+     for md_file in root.rglob("*.md"):
+-        rel = str(md_file.relative_to(root))
++        rel = md_file.relative_to(root).as_posix()
+         try:
+             text = md_file.read_text(encoding="utf-8")
+         except OSError:
