@@ -1,13 +1,13 @@
 <div align="center">
 
+# ✦ Scrooge Stack
+
+**One setup. Three coding agents. Your tools and context.**
+
 [![Issues](https://img.shields.io/github/issues/SkrudjReal/scrooge-stack?style=for-the-badge&color=f0abfc&labelColor=19152e)](https://github.com/SkrudjReal/scrooge-stack/issues)
 [![Pull requests](https://img.shields.io/github/issues-pr/SkrudjReal/scrooge-stack?style=for-the-badge&label=Pull%20requests&color=a5b4fc&labelColor=19152e)](https://github.com/SkrudjReal/scrooge-stack/pulls)
 [![Stars](https://img.shields.io/github/stars/SkrudjReal/scrooge-stack?style=for-the-badge&color=c4b5fd&labelColor=19152e)](https://github.com/SkrudjReal/scrooge-stack/stargazers)
 [![Forks](https://img.shields.io/github/forks/SkrudjReal/scrooge-stack?style=for-the-badge&color=a5b4fc&labelColor=19152e)](https://github.com/SkrudjReal/scrooge-stack/forks)
-
-# ✦ Scrooge Stack
-
-**One setup. Three coding agents. Your tools and context.**
 
 <img src="assets/scrooge-stack-cosmic-command-center.png" alt="Scrooge Stack: a cosmic overview of coding agents, knowledge tools and integrations" width="100%">
 
