@@ -1,4 +1,15 @@
-# Scrooge Stack
+<div align="center">
+
+# ✦ Scrooge Stack
+
+**Portable setup for Codex, Antigravity and Gemini CLI**
+
+[![Stars](https://img.shields.io/github/stars/SkrudjReal/scrooge-stack?style=for-the-badge&color=c4b5fd&labelColor=19152e)](https://github.com/SkrudjReal/scrooge-stack/stargazers)
+[![Issues](https://img.shields.io/github/issues/SkrudjReal/scrooge-stack?style=for-the-badge&color=f0abfc&labelColor=19152e)](https://github.com/SkrudjReal/scrooge-stack/issues)
+
+[Installation](#requirements-and-installation) · [GitHub style](#github-publication-style) · [Verification](#verification-and-limitations)
+
+</div>
 
 Scrooge Stack is an installation and configuration bundle for coding agents. It adapts the original [KISA Stack](https://github.com/howdeploy/kisa-stack) conventions to a portable, user-owned setup; it does not run a Scrooge MCP server. The archived skills and desktop files in this repository remain separate from the installer.
 
@@ -9,6 +20,7 @@ Scrooge Stack is an installation and configuration bundle for coding agents. It 
 | [KISA Deploychan](https://github.com/howdeploy/deploychan_mcp) | Optional remote technical catalog at `https://mcp.deploychan.webcam/mcp`. |
 | [XERJ](https://github.com/xerj-org/xerj) | Upstream search binary and its native MCP adapter. No server is started and nothing is indexed by the installer. |
 | [AAS](https://github.com/sickn33/agentic-awesome-skills) | Local skill collection. Scrooge supplies `aas-skill-selector`, which is not an upstream AAS skill. |
+| [GitHub Markdown style](skills/github-markdown-style/SKILL.md) | Automatic agent instruction before each GitHub push, using the owner's visual reference. |
 | [ShellCheck](https://www.shellcheck.net/) | Static analysis for shell scripts; installed on Ubuntu/WSL when missing. |
 | [Oh My Zsh](https://github.com/ohmyzsh/ohmyzsh) | Optional Ubuntu/WSL shell configuration. |
 | [MCPVault](https://github.com/bitbonsai/mcpvault) + [ObsidianDataWeave](https://github.com/howdeploy/ObsidianDataWeave) | Existing Obsidian vault access, SQLite FTS5 recall, MOC/Zettelkasten and LLM Wiki. Local stdio, read-only by default. |
@@ -65,6 +77,14 @@ Index only paths you have chosen using the [upstream XERJ documentation](https:/
 The AAS checkout is large and copying its skills can consume significant disk space. Skills are loaded on demand by the agent, not all at once. Existing skill directories are never overwritten. Ponytail and Graphify's newly installed skill descriptions require explicit user invocation; existing copies and hooks are left unchanged, so review old automatic integrations yourself.
 
 On Linux/WSL, the installer clones missing Oh My Zsh and the two plugins, then updates only `ZSH_THEME`, `plugins`, and the `:omz:update` policy. Existing `.zshrc` requires exactly one Oh My Zsh source line; ambiguous or unsupported settings stop with an error instead of rewriting the file. A new `.zshrc` receives the required source line. Oh My Zsh's own automatic update is enabled; no background job rewrites `.zshrc`.
+
+## GitHub publication style
+
+Both full installers copy [github-markdown-style](skills/github-markdown-style/SKILL.md) into each selected host's skills directory and merge its invocation rule into the global `AGENTS.md` / `GEMINI.md` instructions. Codex respects `CODEX_HOME`; AGY uses `~/.gemini/config/skills`, Gemini uses `~/.gemini/skills`. Existing skill directories and personal instructions are preserved. The `--only-obsidian` / `-OnlyObsidian` mode remains limited to Obsidian.
+
+Before every agent-driven GitHub push, including code-only pushes, the agent must read the skill and check relevant outgoing Markdown against [example-git-markdown](https://github.com/SkrudjReal/example-git-markdown). The style uses violet badges, a centered README introduction, clear sections, tables, alerts and collapsible details where useful. Issues and PRs use a compact version. Project facts and existing content take priority over decoration; supplied images are inserted unchanged unless editing is requested. Code-only pushes do not require artificial documentation changes.
+
+The agent reads the live reference when accessible; the skill also contains offline style rules. This is a global agent instruction, not a vendor system-prompt modification or Git hook: manual shell pushes do not invoke it, and it grants no extra publication permission. After updating this checkout, rerun the full installer for the desired targets and restart the agent. Existing copies of the skill are intentionally not overwritten; review any local version before replacing it.
 
 ## Obsidian knowledge integration
 

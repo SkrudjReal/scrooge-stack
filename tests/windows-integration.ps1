@@ -54,6 +54,38 @@ try {
     if (-not (Get-ChildItem (Split-Path $Config) -Filter 'mcp_config.json.bak.*')) { throw 'MCP backup missing' }
     & (Join-Path $Root 'install.ps1') -Targets agy -SkipXerj -SkipObsidian
     if ([IO.File]::ReadAllText($Config) -ne $First -or [IO.File]::ReadAllText($Prompt) -ne $FirstPrompt) { throw 'Reinstall changed settings' }
+    function global:codex { $global:LASTEXITCODE = 0; '{"transport":{"url":"https://mcp.deploychan.webcam/mcp"}}' }
+    function global:gemini { $global:LASTEXITCODE = 0 }
+    $env:CODEX_HOME = Join-Path $HOME 'custom codex'
+    $CodexPrompt = Join-Path $env:CODEX_HOME 'AGENTS.md'
+    New-Item -ItemType Directory -Force -Path $env:CODEX_HOME | Out-Null
+    [IO.File]::WriteAllText($CodexPrompt, "Owner rules`n<!-- scrooge-stack:begin -->`nOld rules`n<!-- scrooge-stack:end -->`n")
+    [IO.File]::WriteAllText((Join-Path $HOME '.gemini\settings.json'), '{"mcpServers":{"deploychan":{"url":"https://mcp.deploychan.webcam/mcp"}}}')
+    $StylePaths = @(
+        (Join-Path $env:CODEX_HOME 'skills\github-markdown-style\SKILL.md'),
+        (Join-Path $HOME '.gemini\config\skills\github-markdown-style\SKILL.md'),
+        (Join-Path $HOME '.gemini\skills\github-markdown-style\SKILL.md')
+    )
+    & (Join-Path $Root 'install.ps1') -Targets 'codex,agy,gemini' -SkipXerj -SkipObsidian
+    $ExpectedStyle = [IO.File]::ReadAllText((Join-Path $Root 'skills\github-markdown-style\SKILL.md'))
+    foreach ($StylePath in $StylePaths) {
+        if ([IO.File]::ReadAllText($StylePath) -ne $ExpectedStyle) { throw "GitHub style not installed: $StylePath" }
+        [IO.File]::WriteAllText($StylePath, 'Owner-customized style')
+    }
+    foreach ($PromptPath in @($CodexPrompt, $Prompt)) {
+        $Text = [IO.File]::ReadAllText($PromptPath)
+        if (-not $Text.Contains('github-markdown-style') -or -not $Text.Contains('https://github.com/SkrudjReal/example-git-markdown')) { throw 'GitHub style prompt rule missing' }
+    }
+    if (-not ([IO.File]::ReadAllText($CodexPrompt)).Contains('Owner rules')) { throw 'Owner rules lost' }
+    if (([IO.File]::ReadAllText($CodexPrompt)).Contains('Old rules')) { throw 'Old managed rule not replaced' }
+    if (-not (Get-ChildItem $env:CODEX_HOME -Filter 'AGENTS.md.bak.*')) { throw 'Codex prompt backup missing' }
+    $StylePrompt = [IO.File]::ReadAllText($CodexPrompt)
+    & (Join-Path $Root 'install.ps1') -Targets 'codex,agy,gemini' -SkipXerj -SkipObsidian
+    foreach ($StylePath in $StylePaths) {
+        if ([IO.File]::ReadAllText($StylePath) -ne 'Owner-customized style') { throw 'Local GitHub skill was overwritten' }
+    }
+    if ([IO.File]::ReadAllText($CodexPrompt) -ne $StylePrompt) { throw 'Style prompt reinstall was not idempotent' }
+    $env:CODEX_HOME = $null
     function global:py { $global:ObsidianTestArgs = @($args); $global:LASTEXITCODE = 0 }
     & (Join-Path $Root 'install.ps1') -Targets agy -SkipXerj -ObsidianVault 'C:\Vault with spaces' -ObsidianRepo 'C:\Repo with spaces' -ObsidianWrite
     if (-not ($global:ObsidianTestArgs -contains 'C:\Vault with spaces') -or -not ($global:ObsidianTestArgs -contains 'C:\Repo with spaces') -or -not ($global:ObsidianTestArgs -contains '--enable-writes')) { throw 'Obsidian flag forwarding failed' }
@@ -93,6 +125,8 @@ try {
     Remove-Item Function:\git -ErrorAction SilentlyContinue
     Remove-Item Function:\graphify -ErrorAction SilentlyContinue
     Remove-Item Function:\agy -ErrorAction SilentlyContinue
+    Remove-Item Function:\codex -ErrorAction SilentlyContinue
+    Remove-Item Function:\gemini -ErrorAction SilentlyContinue
     Remove-Item Function:\py -ErrorAction SilentlyContinue
     Remove-Item Function:\Invoke-WebRequest -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath $TestRoot -Recurse -Force

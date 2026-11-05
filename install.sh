@@ -327,6 +327,11 @@ if has_target codex; then copy_skill_dir "$ROOT/skills/aas-skill-selector" "${CO
 if has_target agy; then copy_skill_dir "$ROOT/skills/aas-skill-selector" "$HOME_DIR/.gemini/config/skills/aas-skill-selector"; fi
 if has_target gemini; then copy_skill_dir "$ROOT/skills/aas-skill-selector" "$HOME_DIR/.gemini/skills/aas-skill-selector"; fi
 
+# Owner's GitHub publication style; preserve existing local skills on reruns.
+if has_target codex; then copy_skill_dir "$ROOT/skills/github-markdown-style" "${CODEX_HOME:-$HOME_DIR/.codex}/skills/github-markdown-style"; fi
+if has_target agy; then copy_skill_dir "$ROOT/skills/github-markdown-style" "$HOME_DIR/.gemini/config/skills/github-markdown-style"; fi
+if has_target gemini; then copy_skill_dir "$ROOT/skills/github-markdown-style" "$HOME_DIR/.gemini/skills/github-markdown-style"; fi
+
 # 6. ShellCheck checks shell scripts and is installed from Ubuntu's package repository.
 say '6/10 ShellCheck'
 if command -v shellcheck >/dev/null; then

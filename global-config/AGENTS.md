@@ -10,6 +10,11 @@
 - Ask before destructive or expensive operations. Never disclose credentials or claim checks that did not run.
 - Communicate in Russian by default; use English for GitHub issues, pull requests and reviews unless requested otherwise.
 
+## GitHub publication style
+
+- Before every agent-driven GitHub push (including code-only pushes), read and apply the installed `github-markdown-style` skill. Also use it when preparing GitHub README files, issue/PR templates, issues, pull requests, discussions or release notes. Canonical style reference: https://github.com/SkrudjReal/example-git-markdown.
+- Find the skill in the current host's skills directory: Codex `$CODEX_HOME/skills` (default `~/.codex/skills`), AGY `~/.gemini/config/skills`, Gemini `~/.gemini/skills`. If missing, report it and use the reference directly. Preserve task scope and explicit project/user requirements; do not add unrelated restyling commits or publish without authorization.
+
 ## Obsidian knowledge
 
 - For Obsidian notes, use the installed `obsidian-dataweave-codex` skill and `mcpvault` MCP. The skill records this machine's vault, DataWeave and Python paths. If not configured, ask for an existing vault; never silently create one.

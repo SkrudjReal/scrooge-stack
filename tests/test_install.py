@@ -142,6 +142,45 @@ assert pathlib.Path(sys.argv[1]).name == 'install-obsidian.py'
         self.assertNotEqual(result.returncode, 0)
         self.assertNotIn('10/10 Choirboy', result.stdout)
 
+    def test_github_style_installs_for_all_hosts_and_preserves_local_edits(self):
+        self.mock('codex', '#!/bin/sh\nprintf \'{"transport":{"url":"https://mcp.deploychan.webcam/mcp"}}\\n\'\n')
+        self.mock('gemini', '#!/bin/sh\nexit 0\n')
+        settings = self.home / '.gemini/settings.json'
+        settings.parent.mkdir(parents=True)
+        settings.write_text(json.dumps({'mcpServers': {'deploychan': {'url': 'https://mcp.deploychan.webcam/mcp'}}}))
+        codex_home = self.home / 'custom codex'
+        env = dict(self.env, CODEX_HOME=str(codex_home))
+        prompt = codex_home / 'AGENTS.md'
+        prompt.parent.mkdir(parents=True)
+        prompt.write_text('Owner instructions\n<!-- scrooge-stack:begin -->\nOld rules\n<!-- scrooge-stack:end -->\n')
+        cmd = ['bash', str(ROOT / 'install.sh'), '--targets', 'codex,agy,gemini',
+               '--skip-xerj', '--skip-zsh', '--skip-obsidian']
+        dry = subprocess.run(cmd + ['--dry-run'], env=env, cwd=self.root, text=True, capture_output=True)
+        self.assertEqual(dry.returncode, 0, dry.stderr)
+        skills = [codex_home / 'skills/github-markdown-style/SKILL.md',
+                  self.home / '.gemini/config/skills/github-markdown-style/SKILL.md',
+                  self.home / '.gemini/skills/github-markdown-style/SKILL.md']
+        self.assertTrue(all(not path.exists() for path in skills))
+        first = subprocess.run(cmd, env=env, cwd=self.root, text=True, capture_output=True)
+        self.assertEqual(first.returncode, 0, first.stderr)
+        expected = (ROOT / 'skills/github-markdown-style/SKILL.md').read_bytes()
+        for path in skills:
+            self.assertEqual(path.read_bytes(), expected)
+        for path in [prompt, self.home / '.gemini/GEMINI.md']:
+            self.assertIn('github-markdown-style', path.read_text())
+            self.assertIn('https://github.com/SkrudjReal/example-git-markdown', path.read_text())
+        self.assertIn('Owner instructions', prompt.read_text())
+        self.assertNotIn('Old rules', prompt.read_text())
+        self.assertTrue(list(codex_home.glob('AGENTS.md.bak.*')))
+        snapshots = [path.read_bytes() for path in [prompt, self.home / '.gemini/GEMINI.md']]
+        for path in skills:
+            path.write_text('Owner-customized skill\n')
+        second = subprocess.run(cmd, env=env, cwd=self.root, text=True, capture_output=True)
+        self.assertEqual(second.returncode, 0, second.stderr)
+        for path in skills:
+            self.assertEqual(path.read_text(), 'Owner-customized skill\n')
+        self.assertEqual([path.read_bytes() for path in [prompt, self.home / '.gemini/GEMINI.md']], snapshots)
+
     def test_conflicting_mcp_is_preserved(self):
         config = self.home / '.gemini/config/mcp_config.json'
         config.parent.mkdir(parents=True)

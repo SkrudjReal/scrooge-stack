@@ -352,6 +352,12 @@ if (HasTarget 'codex') { CopySkill $Selector (Join-Path $CodexHome 'skills\aas-s
 if (HasTarget 'agy') { CopySkill $Selector (Join-Path $HOME '.gemini\config\skills\aas-skill-selector') }
 if (HasTarget 'gemini') { CopySkill $Selector (Join-Path $HOME '.gemini\skills\aas-skill-selector') }
 
+# Owner's GitHub publication style; preserve existing local skills on reruns.
+$GitHubStyle = Join-Path $Root 'skills\github-markdown-style'
+if (HasTarget 'codex') { CopySkill $GitHubStyle (Join-Path $CodexHome 'skills\github-markdown-style') }
+if (HasTarget 'agy') { CopySkill $GitHubStyle (Join-Path $HOME '.gemini\config\skills\github-markdown-style') }
+if (HasTarget 'gemini') { CopySkill $GitHubStyle (Join-Path $HOME '.gemini\skills\github-markdown-style') }
+
 # 6. Same portable helper as Linux; native Python, no Bash or REST API required.
 Log '6/8 Obsidian (MCPVault + DataWeave + FTS5)'
 if (-not $SkipObsidian) { InstallObsidian }
