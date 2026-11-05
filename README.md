@@ -9,7 +9,7 @@
 [![Stars](https://img.shields.io/github/stars/SkrudjReal/scrooge-stack?style=for-the-badge&color=c4b5fd&labelColor=19152e)](https://github.com/SkrudjReal/scrooge-stack/stargazers)
 [![Forks](https://img.shields.io/github/forks/SkrudjReal/scrooge-stack?style=for-the-badge&color=a5b4fc&labelColor=19152e)](https://github.com/SkrudjReal/scrooge-stack/forks)
 
-<img src="assets/scrooge-stack-cosmic-command-center.png" alt="Scrooge Stack: a cosmic overview of coding agents, knowledge tools and integrations" width="100%">
+<img src="assets/scrooge-stack-cosmic-command-center.png" alt="Neon Scrooge Stack Dashboard: coding agents, tools and integrations" width="100%">
 
 [Quick start](#quick-start) · [The stack](#the-stack) · [Documentation](docs/SETUP.md) · [Report a bug](https://github.com/SkrudjReal/scrooge-stack/issues/new)
 
