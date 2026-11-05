@@ -29,7 +29,7 @@ Scrooge Stack sets up skills, MCP integrations and global instructions for **Cod
 | ◇ Search | [Graphify](https://github.com/Graphify-Labs/graphify), [XERJ](https://github.com/xerj-org/xerj), [Deploychan](https://github.com/howdeploy/deploychan_mcp) | Knowledge graphs, local search and a technical catalog |
 | ✧ Knowledge | [MCPVault](https://github.com/bitbonsai/mcpvault), [ObsidianDataWeave](https://github.com/howdeploy/ObsidianDataWeave), [Choirboy](https://github.com/howdeploy/choirboy-prompt) | Obsidian workflows and optional personal context |
 | ⌘ Environment | [ShellCheck](https://www.shellcheck.net/), [Oh My Zsh](https://github.com/ohmyzsh/ohmyzsh) | Shell checks and optional Ubuntu/WSL configuration |
-| ♡ Presentation | [GitHub Markdown style](skills/github-markdown-style/SKILL.md) | Your [reference style](https://github.com/SkrudjReal/example-git-markdown), checked by the agent before each GitHub push |
+| ♡ Presentation | [GitHub Markdown style](skills/github-markdown-style/SKILL.md) | Your [reference style](https://github.com/SkrudjReal/example-git-markdown), applied on repository creation and checked before each GitHub push |
 
 Ponytail and Graphify activate only when requested. Choirboy is staged without activation until personalized.
 

@@ -1,16 +1,23 @@
 ---
 name: github-markdown-style
-description: Apply the owner's GitHub Markdown style before every agent-driven GitHub push and when preparing README files, issue or PR templates, issues, pull requests, discussions, or release notes.
+description: Apply the owner's approved GitHub Markdown layout when creating repositories, before every agent-driven GitHub push, and when preparing README files, issue or PR templates, issues, pull requests, discussions, or release notes.
 ---
 
 # GitHub Markdown style
 
 Canonical visual reference: https://github.com/SkrudjReal/example-git-markdown
 Source: https://github.com/SkrudjReal/example-git-markdown/blob/main/README.md
+Approved project layout: https://github.com/SkrudjReal/scrooge-stack/blob/main/README.md
 
-## Before each GitHub push
+## Repository creation and every GitHub push
 
-Read this skill on every push operation, including code-only pushes. Inspect the
+Read this skill when creating or initializing a repository intended for GitHub,
+before its first publication, and on every push operation, including code-only pushes.
+For a new project, prepare a concise project-specific README in the layout below
+as part of the initial repository setup. Do not create a remote repository unless
+the user's request authorizes it.
+
+Inspect the
 outgoing diff and relevant README/templates. Apply the reference style to new or
 changed GitHub-facing Markdown within the authorized task. If the documentation
 already fits or no documentation changes are needed, keep the diff unchanged;
@@ -24,8 +31,20 @@ cannot be fetched.
 
 ## Style rules
 
-- For project READMEs, use a centered title/short introduction, a compact row of
-  relevant clickable Shields.io badges, and quick navigation when useful.
+- Preserve this exact README header order inside a centered block:
+  1. Project title (for example, `# ✦ Project Name`).
+  2. One short subtitle describing the actual project.
+  3. Clickable Shields.io badges: Issues, Pull requests, Stars, Forks, linked to
+     the current repository. Badges go BELOW the title/subtitle and ABOVE the image.
+  4. A full-width project cover (`width="100%"`) when an approved image exists.
+     If none exists, omit the image without inventing or borrowing one.
+  5. Compact navigation to quick start, features/stack, documentation and issue creation.
+- Keep the README concise: a short project description, a compact feature/stack
+  table, runnable quick-start commands and links to documentation. Put advanced
+  setup, troubleshooting and lengthy limitations in linked documentation; use
+  `<details>` for secondary options. Preserve essential prerequisites, actual
+  limitations and attribution. Do not add filler, duplicated descriptions or a
+  Markdown tutorial to a product README.
 - Match the reference's violet/lavender accents: badge colors `c4b5fd`, `a5b4fc`,
   `f0abfc`, with `labelColor=19152e` and `style=for-the-badge`. GitHub controls the
   page background; do not add CSS or scripts to try to recolor it.
@@ -51,7 +70,8 @@ cannot be fetched.
 
 ## Verify and publish
 
-Check the diff, local image paths, links/anchors and Markdown structure; use a
+Check the title → subtitle → badges → cover → navigation order, the diff, local
+image paths, links/anchors and Markdown structure; use a
 GitHub Markdown preview/API when available. Run checks relevant to the actual
 change. Report what was checked and any rendering limitation honestly.
 
