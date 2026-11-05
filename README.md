@@ -4,6 +4,10 @@
 
 **Portable setup for Codex, Antigravity and Gemini CLI**
 
+<img src="assets/scrooge-stack-cosmic-command-center.png" alt="Scrooge Stack Cosmic Command Center: a violet cosmic illustration of the agent stack, integrations and Windows, WSL and Linux environments" width="100%">
+
+<sub>Stack overview · Follow the <a href="#requirements-and-installation">installation instructions below</a> for current commands and options.</sub>
+
 [![Stars](https://img.shields.io/github/stars/SkrudjReal/scrooge-stack?style=for-the-badge&color=c4b5fd&labelColor=19152e)](https://github.com/SkrudjReal/scrooge-stack/stargazers)
 [![Issues](https://img.shields.io/github/issues/SkrudjReal/scrooge-stack?style=for-the-badge&color=f0abfc&labelColor=19152e)](https://github.com/SkrudjReal/scrooge-stack/issues)
 
