@@ -51,6 +51,9 @@ try {
     if ($Data.other -ne 42 -or $Data.unicode -ne $Unicode -or $Data.mcpServers.other.command -ne 'kept' -or $Data.mcpServers.deploychan.serverUrl -ne 'https://mcp.deploychan.webcam/mcp') { throw 'MCP preservation failed' }
     if ([IO.File]::ReadAllBytes($Config)[0] -eq 0xEF) { throw 'Unexpected UTF-8 BOM' }
     if (-not $FirstPrompt.Contains('Personal instructions')) { throw 'Prompt preservation failed' }
+    if (-not $FirstPrompt.Contains('At the start of work on any project') -or -not $FirstPrompt.Contains('graphify-out/graph.json')) { throw 'Graphify project workflow missing' }
+    $GraphSkillText = [IO.File]::ReadAllText((Join-Path $HOME '.gemini\config\skills\graphify\SKILL.md'))
+    if (-not $GraphSkillText.Contains('description: auto') -or $GraphSkillText.Contains('Use only when')) { throw 'Graphify automatic discovery was restricted' }
     if (-not (Get-ChildItem (Split-Path $Config) -Filter 'mcp_config.json.bak.*')) { throw 'MCP backup missing' }
     & (Join-Path $Root 'install.ps1') -Targets agy -SkipXerj -SkipObsidian
     if ([IO.File]::ReadAllText($Config) -ne $First -or [IO.File]::ReadAllText($Prompt) -ne $FirstPrompt) { throw 'Reinstall changed settings' }

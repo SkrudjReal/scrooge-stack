@@ -134,7 +134,9 @@ assert pathlib.Path(sys.argv[1]).name == 'install-obsidian.py'
         second = self.run_installer()
         self.assertEqual(second.returncode, 0, second.stderr)
         self.assertEqual([p.read_text() for p in (config, prompt, rc)], snapshots)
-        self.assertIn('Use only when the user explicitly requests', (self.home / '.gemini/config/skills/graphify/SKILL.md').read_text())
+        self.assertIn('description: auto activate', (self.home / '.gemini/config/skills/graphify/SKILL.md').read_text())
+        self.assertIn('At the start of work on any project', prompt.read_text())
+        self.assertIn('graphify-out/graph.json', prompt.read_text())
 
     def test_failure_stops_before_choirboy(self):
         env = dict(self.env, TEST_FAIL_URL='agentic-awesome-skills')

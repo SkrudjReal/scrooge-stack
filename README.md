@@ -31,7 +31,7 @@ Scrooge Stack sets up skills, MCP integrations and global instructions for **Cod
 | ⌘ Environment | [ShellCheck](https://www.shellcheck.net/), [Oh My Zsh](https://github.com/ohmyzsh/ohmyzsh) | Shell checks and optional Ubuntu/WSL configuration |
 | ♡ Presentation | [GitHub Markdown style](skills/github-markdown-style/SKILL.md) | Your [reference style](https://github.com/SkrudjReal/example-git-markdown), applied on repository creation and checked before each GitHub push |
 
-Ponytail and Graphify activate only when requested. Choirboy is staged without activation until personalized.
+Graphify is required at the start of project work: reuse an existing graph or initialize one, then study the project through it. Ponytail activates only when requested. Choirboy is staged without activation until personalized.
 
 ## Quick start
 

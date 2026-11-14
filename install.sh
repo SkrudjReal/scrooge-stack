@@ -138,9 +138,9 @@ if command -v graphify >/dev/null && (( ! DRY_RUN )); then
   temp_graphify="$(mktemp -d)"
   (cd "$temp_graphify" && HOME="$temp_graphify" CODEX_HOME="$temp_graphify/.codex" graphify install --platform codex) || warn 'Graphify skill extraction failed'
   [[ -f "$temp_graphify/.codex/skills/graphify/SKILL.md" ]] || warn 'Graphify did not produce a skill'
-  if has_target codex; then manual_skill "$temp_graphify/.codex/skills/graphify" "${CODEX_HOME:-$HOME_DIR/.codex}/skills/graphify" graphify; fi
-  if has_target agy; then manual_skill "$temp_graphify/.codex/skills/graphify" "$HOME_DIR/.gemini/config/skills/graphify" graphify; fi
-  if has_target gemini; then manual_skill "$temp_graphify/.codex/skills/graphify" "$HOME_DIR/.gemini/skills/graphify" graphify; fi
+  if has_target codex; then copy_skill_dir "$temp_graphify/.codex/skills/graphify" "${CODEX_HOME:-$HOME_DIR/.codex}/skills/graphify"; fi
+  if has_target agy; then copy_skill_dir "$temp_graphify/.codex/skills/graphify" "$HOME_DIR/.gemini/config/skills/graphify"; fi
+  if has_target gemini; then copy_skill_dir "$temp_graphify/.codex/skills/graphify" "$HOME_DIR/.gemini/skills/graphify"; fi
   rm -rf -- "$temp_graphify"
 elif ((DRY_RUN)); then say "Would register Graphify per target if available"; fi
 

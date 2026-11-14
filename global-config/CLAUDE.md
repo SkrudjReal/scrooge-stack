@@ -2,7 +2,11 @@
 
 - Use Linux paths and commands; treat Windows and WSL environments separately.
 - Before nontrivial coding changes, use `aas-skill-selector` if available. Read only relevant skills; skip selection for inspection, diagnostics, documentation and simple file or Git operations.
-- Use Ponytail and Graphify only when explicitly requested. Prefer an existing Graphify graph when applicable.
+- Use Ponytail only when explicitly requested.
+- At the start of work on any project, load the installed Graphify skill and initialize project understanding through Graphify without waiting for an explicit user request. If an older skill description says Graphify is explicit-only, this instruction requires loading it for project work.
+- Check for `graphify-out/graph.json` in the project root first. Reuse an existing graph; if absent, build it using the skill workflow (`/graphify <project-root>` in the assistant, not a shell command). Incrementally update a stale graph using the skill's update workflow; do not rebuild an unchanged graph each session.
+- Study project architecture, dependencies, callers and data flows through Graphify `query`, `path` and `explain` first, then read the relevant source files to verify findings before editing. Follow the skill's corpus limits and exclusions; never index secrets, sessions, personal archives or dependency/build directories.
+- Locate `graphify/SKILL.md` in the current host's skills directory (Codex, AGY or Gemini). If Graphify or its skill is unavailable or fails, report the limitation and continue with direct source inspection; never claim a graph was built or queried when it was not.
 - Use KISA Deploychan as an optional technical knowledge source, and XERJ for targeted local search when available. Verify findings against source files; do not index personal files without authorization.
 - Consult Choirboy for relevant established project context if available. Never create or update persistent memory without explicit permission.
 - Understand existing behavior and callers, preserve unrelated changes and configuration, and implement the smallest complete fix. Verify it with appropriate safe tests.

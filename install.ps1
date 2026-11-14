@@ -174,9 +174,9 @@ if (Available 'graphify') {
             if (-not (Test-Path -LiteralPath (Join-Path $GraphSkill 'SKILL.md'))) { throw 'Graphify did not produce a skill' }
         } finally { $env:USERPROFILE = $OldProfile; $env:HOME = $OldHome; $env:CODEX_HOME = $OldCodex }
         try {
-            if (HasTarget 'codex') { CopyManualSkill $GraphSkill (Join-Path $CodexHome 'skills\graphify') 'graphify' }
-            if (HasTarget 'agy') { CopyManualSkill $GraphSkill (Join-Path $HOME '.gemini\config\skills\graphify') 'graphify' }
-            if (HasTarget 'gemini') { CopyManualSkill $GraphSkill (Join-Path $HOME '.gemini\skills\graphify') 'graphify' }
+            if (HasTarget 'codex') { CopySkill $GraphSkill (Join-Path $CodexHome 'skills\graphify') }
+            if (HasTarget 'agy') { CopySkill $GraphSkill (Join-Path $HOME '.gemini\config\skills\graphify') }
+            if (HasTarget 'gemini') { CopySkill $GraphSkill (Join-Path $HOME '.gemini\skills\graphify') }
         } finally { Remove-Item -LiteralPath $TempGraph -Recurse -Force }
     }
 }

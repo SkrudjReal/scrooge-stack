@@ -52,7 +52,15 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "$env:LOCALAPPDATA\scrooge-s
 
 Index only paths you have chosen using the [upstream XERJ documentation](https://www.xerj.org/docs/cli). Stop the node with Ctrl+C. Never put the admin key into an agent config.
 
-The AAS checkout is large and copying its skills can consume significant disk space. Skills are loaded on demand by the agent, not all at once. Existing skill directories are never overwritten. Ponytail and Graphify's newly installed skill descriptions require explicit user invocation; existing copies and hooks are left unchanged, so review old automatic integrations yourself.
+The AAS checkout is large and copying its skills can consume significant disk space. Skills are loaded on demand by the agent, not all at once. Existing skill directories are never overwritten. Newly installed Ponytail skills require explicit user invocation. Graphify retains its upstream skill description and is required by the installed global instructions at the start of project work. Existing copies and hooks are left unchanged.
+
+### Graphify project workflow
+
+At the start of work on a project, the agent must load the installed `graphify/SKILL.md` and check `<project-root>/graphify-out/graph.json`. Reuse the existing graph; if absent, build it through the skill (`/graphify <project-root>` in the assistant). Update a stale graph incrementally through the skill, without rebuilding unchanged projects every session. Explore architecture, dependencies, callers and data flows with `graphify query`, `graphify path` and `graphify explain`, then verify the relevant source files before editing.
+
+This follows the upstream [Graphify skill](https://github.com/Graphify-Labs/graphify/blob/v8/graphify/skill-codex.md) and [quickstart](https://graphiffy.com/docs). The slash workflow belongs in the assistant; it is not a shell command. Follow the skill's corpus-size gates and exclude secrets, sessions, personal archives, dependencies and build outputs. If the tool or skill is unavailable or fails, report it and continue with source inspection without claiming Graphify ran.
+
+The rule is installed for Linux/WSL and native Windows in Codex `AGENTS.md` and Gemini/AGY `GEMINI.md`. It also directs the agent to load preserved older Graphify copies whose descriptions still say explicit-only. Rerun the installer and restart the selected agents to receive the updated managed instruction block. No hooks or project graphs are created by the installer itself.
 
 On Linux/WSL, the installer clones missing Oh My Zsh and the two plugins, then updates only `ZSH_THEME`, `plugins`, and the `:omz:update` policy. Existing `.zshrc` requires exactly one Oh My Zsh source line; ambiguous or unsupported settings stop with an error instead of rewriting the file. A new `.zshrc` receives the required source line. Oh My Zsh's own automatic update is enabled; no background job rewrites `.zshrc`.
 
