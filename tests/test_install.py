@@ -34,7 +34,7 @@ p=pathlib.Path(os.environ['HOME'])/'.codex/skills/graphify'; p.mkdir(parents=Tru
 (p/'SKILL.md').write_text('---\\nname: graphify\\ndescription: auto activate\\n---\\nBody\\n')
 ''')
         self.mock('zsh', '#!/bin/sh\nexit 0\n')
-        self.mock('agy', '#!/bin/sh\nprintf "deploychan  http\\nxerj  stdio\\n"\n')
+        self.mock('agy', '#!/bin/sh\nprintf "deploychan  http\\nkeenable  http\\nxerj  stdio\\n"\n')
         self.mock('shellcheck', '#!/bin/sh\nexit 0\n')
         self.env = dict(os.environ, HOME=str(self.home), XDG_DATA_HOME=str(self.home / '.local/share'), PATH=str(self.bin) + os.pathsep + os.environ['PATH'])
         self.env.pop('CODEX_HOME', None)
@@ -145,11 +145,11 @@ assert pathlib.Path(sys.argv[1]).name == 'install-obsidian.py'
         self.assertNotIn('10/10 Choirboy', result.stdout)
 
     def test_github_style_installs_for_all_hosts_and_preserves_local_edits(self):
-        self.mock('codex', '#!/bin/sh\nprintf \'{"transport":{"url":"https://mcp.deploychan.webcam/mcp"}}\\n\'\n')
+        self.mock('codex', "#!/usr/bin/env python3\nimport json,sys\nurl = 'https://api.keenable.ai/mcp-public' if sys.argv[3] == 'keenable' else 'https://mcp.deploychan.webcam/mcp'\nprint(json.dumps({'transport': {'url': url}}))\n")
         self.mock('gemini', '#!/bin/sh\nexit 0\n')
         settings = self.home / '.gemini/settings.json'
         settings.parent.mkdir(parents=True)
-        settings.write_text(json.dumps({'mcpServers': {'deploychan': {'url': 'https://mcp.deploychan.webcam/mcp'}}}))
+        settings.write_text(json.dumps({'mcpServers': {name: {'url': url} for name, url in [('deploychan', 'https://mcp.deploychan.webcam/mcp'), ('keenable', 'https://api.keenable.ai/mcp-public')]}}))
         codex_home = self.home / 'custom codex'
         env = dict(self.env, CODEX_HOME=str(codex_home))
         prompt = codex_home / 'AGENTS.md'
@@ -182,6 +182,26 @@ assert pathlib.Path(sys.argv[1]).name == 'install-obsidian.py'
         for path in skills:
             self.assertEqual(path.read_text(), 'Owner-customized skill\n')
         self.assertEqual([path.read_bytes() for path in [prompt, self.home / '.gemini/GEMINI.md']], snapshots)
+
+    def test_keenable_registration_skill_and_conflict(self):
+        result = self.run_installer('--skip-zsh')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        config = self.home / '.gemini/config/mcp_config.json'
+        data = json.loads(config.read_text())
+        self.assertEqual(data['mcpServers']['keenable'], {'serverUrl': 'https://api.keenable.ai/mcp-public'})
+        skill = self.home / '.gemini/config/skills/keenable-cli/SKILL.md'
+        self.assertEqual(skill.read_bytes(), (ROOT / 'skills/keenable-cli/SKILL.md').read_bytes())
+        self.assertIn('search_web_pages', (self.home / '.gemini/GEMINI.md').read_text())
+        skill.write_text('Owner skill')
+        repeat = self.run_installer('--skip-zsh')
+        self.assertEqual(repeat.returncode, 0, repeat.stderr)
+        self.assertEqual(skill.read_text(), 'Owner skill')
+        data['mcpServers']['keenable']['serverUrl'] = 'https://other.invalid'
+        config.write_text(json.dumps(data))
+        original = config.read_bytes()
+        conflict = self.run_installer('--skip-zsh')
+        self.assertNotEqual(conflict.returncode, 0)
+        self.assertEqual(config.read_bytes(), original)
 
     def test_conflicting_mcp_is_preserved(self):
         config = self.home / '.gemini/config/mcp_config.json'

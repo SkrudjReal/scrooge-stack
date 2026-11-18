@@ -129,3 +129,13 @@ If a selected CLI or prerequisite is missing, install it and rerun. A failed clo
 The repository includes isolated Linux tests and a Windows PowerShell 5.1 mocked integration test; run `python3 -m unittest discover -s tests -v` and `powershell -NoProfile -File .\tests\windows-integration.ps1`. Their coverage does not prove real installations of every upstream version or architecture. ARM64, PowerShell 7, complete real Windows installations, and live Gemini CLI connections need platform-specific verification. Real Codex and AGY configuration discovery and XERJ MCP initialization were checked in isolated Linux homes; other installer dependencies in those runs were mocked. Most upstream Git checkouts are not version pinned; Obsidian pins are documented above. Review upstream content and update policy. No background service or custom MCP server is supplied.
 
 The original single archived-skill installer remains available as `scripts/install-archived-skill.sh`; see [skills/README.md](../skills/README.md). Attribution and licenses of upstream components remain with their respective authors.
+
+## Keenable web search
+
+Both installers register `keenable` for every selected agent (Codex, Antigravity, Gemini CLI) and copy the official [keenable-cli skill](https://app.keenable.ai/SKILL.md). Existing skills and conflicting MCP entries are preserved; conflicts stop installation. Restart agents after setup.
+
+The bundled skill documents the optional Keenable CLI; the stack uses remote MCP and does not require or install that binary. The system instructions prefer `search_web_pages` and `fetch_page_content`, with fallback when unavailable. Existing built-in web tools remain enabled.
+
+The default endpoint is `https://api.keenable.ai/mcp-public`, the [official keyless preset endpoint](https://docs.keenable.ai/mcp-server.md#keyless-endpoint-for-listings-and-presets). No login or API key is needed. For organization limits, configure your client's private `X-API-Key` header using the [official instructions](https://docs.keenable.ai/mcp-server.md). Never commit credentials. An existing authenticated configuration is preserved and must be reconciled manually if its endpoint differs.
+
+After restart, check that both tools are listed, search for a current documentation topic, then fetch one result. A successful installer registration alone does not prove model tool use. On 429, respect Retry-After and retry once; on repeated 429 or 402, report the limit.

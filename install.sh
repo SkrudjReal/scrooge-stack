@@ -144,48 +144,8 @@ if command -v graphify >/dev/null && (( ! DRY_RUN )); then
   rm -rf -- "$temp_graphify"
 elif ((DRY_RUN)); then say "Would register Graphify per target if available"; fi
 
-# 3. Deploychan remote MCP. Do NOT create or host an MCP service.
-say "3/10 Deploychan remote MCP"
-if has_target codex; then
-  if command -v codex >/dev/null; then
-    if ((DRY_RUN)); then say 'Would verify or register Codex Deploychan'; else
-    if codex mcp get deploychan >/dev/null 2>&1; then
-      codex mcp get deploychan --json | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d.get("transport",{}).get("url") == "https://mcp.deploychan.webcam/mcp", "Existing deploychan differs"' || warn 'Existing Codex Deploychan differs or is invalid'
-    else backup "${CODEX_HOME:-$HOME_DIR/.codex}/config.toml"; execute codex mcp add deploychan --url "$URL" || warn "Codex MCP registration failed"; fi
-    codex mcp get deploychan >/dev/null || warn 'Codex Deploychan verification failed'
-    fi
-  else warn "codex command missing; Codex MCP not configured"; fi
-fi
-if has_target agy; then
-  if command -v python3 >/dev/null; then
-    if ((DRY_RUN)); then say "Would merge Deploychan into ~/.gemini/config/mcp_config.json"; else
-      SCROOGE_MCP_URL="$URL" python3 - <<'PY'
-import json, os
-from pathlib import Path
-from datetime import datetime
-p=Path.home()/'.gemini/config/mcp_config.json'
-p.parent.mkdir(parents=True, exist_ok=True)
-if p.exists():
-    data=json.loads(p.read_text(encoding='utf-8-sig'))
-    if not isinstance(data,dict): raise ValueError('MCP config root must be an object')
-else: data={}
-servers=data.setdefault('mcpServers',{})
-if not isinstance(servers,dict): raise ValueError('mcpServers must be an object')
-entry={'serverUrl':os.environ['SCROOGE_MCP_URL']}
-if 'deploychan' in servers and servers['deploychan'] != entry:
-    raise ValueError('Existing deploychan MCP differs; preserve it and resolve manually')
-if 'deploychan' not in servers:
-    if p.exists():
-        import shutil
-        shutil.copy2(p, str(p)+'.bak.'+datetime.now().strftime('%Y%m%d-%H%M%S-%f'))
-    servers['deploychan']=entry
-    p.write_text(json.dumps(data,indent=2,ensure_ascii=False)+'\n',encoding='utf-8')
-print('AGY MCP configured:',p)
-PY
-    fi
-  else warn "python3 missing, cannot safely merge AGY MCP config"; fi
-  if (( ! DRY_RUN )); then agy mcp list | grep -Eq '^deploychan[[:space:]]' || warn 'AGY Deploychan registration verification failed'; fi
-fi
+# 3. Deploychan and Keenable remote MCP. Do NOT create or host an MCP service.
+say "3/10 Deploychan + Keenable remote MCP"
 gemini_mcp() {
   local name="$1" expected="$2"; shift 2
   local settings="$HOME_DIR/.gemini/settings.json" status=0
@@ -198,11 +158,56 @@ gemini_mcp() {
   esac
   python3 "$ROOT/scripts/check-gemini-mcp.py" "$settings" "$name" "$expected" || warn "Gemini $name verification failed"
 }
-if has_target gemini; then
-  if command -v gemini >/dev/null; then gemini_mcp deploychan "$URL" --transport http "$URL"
-  else warn 'gemini command missing; Gemini MCP not configured'; fi
-fi
+for remote_name in deploychan keenable; do
+  URL="https://mcp.deploychan.webcam/mcp"
+  if [[ "$remote_name" == keenable ]]; then URL="https://api.keenable.ai/mcp-public"; fi
+  if has_target codex; then
+    if command -v codex >/dev/null; then
+      if ((DRY_RUN)); then say "Would verify or register Codex $remote_name"; else
+      if codex mcp get "$remote_name" >/dev/null 2>&1; then
+        codex mcp get "$remote_name" --json | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d.get("transport",{}).get("url") == sys.argv[1], "Existing remote MCP differs"' "$URL" || warn "Existing Codex $remote_name differs or is invalid"
+      else backup "${CODEX_HOME:-$HOME_DIR/.codex}/config.toml"; execute codex mcp add "$remote_name" --url "$URL" || warn "Codex MCP registration failed"; fi
+      codex mcp get "$remote_name" >/dev/null || warn "Codex $remote_name verification failed"
+      fi
+    else warn "codex command missing; Codex MCP not configured"; fi
+  fi
+  if has_target agy; then
+    if command -v python3 >/dev/null; then
+      if ((DRY_RUN)); then say "Would merge $remote_name into ~/.gemini/config/mcp_config.json"; else
+        SCROOGE_MCP_NAME="$remote_name" SCROOGE_MCP_URL="$URL" python3 - <<'PY'
+import json, os
+from pathlib import Path
+from datetime import datetime
+p=Path.home()/'.gemini/config/mcp_config.json'
+p.parent.mkdir(parents=True, exist_ok=True)
+if p.exists():
+    data=json.loads(p.read_text(encoding='utf-8-sig'))
+    if not isinstance(data,dict): raise ValueError('MCP config root must be an object')
+else: data={}
+servers=data.setdefault('mcpServers',{})
+if not isinstance(servers,dict): raise ValueError('mcpServers must be an object')
+entry={'serverUrl':os.environ['SCROOGE_MCP_URL']}
+name=os.environ['SCROOGE_MCP_NAME']
+if name in servers and servers[name] != entry:
+    raise ValueError('Existing remote MCP differs; preserve it and resolve manually')
+if name not in servers:
+    if p.exists():
+        import shutil
+        shutil.copy2(p, str(p)+'.bak.'+datetime.now().strftime('%Y%m%d-%H%M%S-%f'))
+    servers[name]=entry
+    p.write_text(json.dumps(data,indent=2,ensure_ascii=False)+'\n',encoding='utf-8')
+print('AGY MCP configured:',p)
+PY
+      fi
+    else warn "python3 missing, cannot safely merge AGY MCP config"; fi
+    if (( ! DRY_RUN )); then agy mcp list | grep -Eq "^${remote_name}[[:space:]]" || warn "AGY $remote_name registration verification failed"; fi
+  fi
+  if has_target gemini; then
+    if command -v gemini >/dev/null; then gemini_mcp "$remote_name" "$URL" --transport http "$URL"
+    else warn 'gemini command missing; Gemini MCP not configured'; fi
+  fi
 
+done
 
 # 4. XERJ official local search engine + its own MCP stdio adapter.
 # Only download checksummed GitHub releases; never start/index automatically.
@@ -326,6 +331,11 @@ else warn 'AAS installation failed'; fi
 if has_target codex; then copy_skill_dir "$ROOT/skills/aas-skill-selector" "${CODEX_HOME:-$HOME_DIR/.codex}/skills/aas-skill-selector"; fi
 if has_target agy; then copy_skill_dir "$ROOT/skills/aas-skill-selector" "$HOME_DIR/.gemini/config/skills/aas-skill-selector"; fi
 if has_target gemini; then copy_skill_dir "$ROOT/skills/aas-skill-selector" "$HOME_DIR/.gemini/skills/aas-skill-selector"; fi
+
+# Official Keenable skill, preserved on reruns.
+if has_target codex; then copy_skill_dir "$ROOT/skills/keenable-cli" "${CODEX_HOME:-$HOME_DIR/.codex}/skills/keenable-cli"; fi
+if has_target agy; then copy_skill_dir "$ROOT/skills/keenable-cli" "$HOME_DIR/.gemini/config/skills/keenable-cli"; fi
+if has_target gemini; then copy_skill_dir "$ROOT/skills/keenable-cli" "$HOME_DIR/.gemini/skills/keenable-cli"; fi
 
 # Owner's GitHub publication style; preserve existing local skills on reruns.
 if has_target codex; then copy_skill_dir "$ROOT/skills/github-markdown-style" "${CODEX_HOME:-$HOME_DIR/.codex}/skills/github-markdown-style"; fi

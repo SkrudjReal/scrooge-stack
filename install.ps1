@@ -181,44 +181,8 @@ if (Available 'graphify') {
     }
 }
 
-# 3. Deploychan remote MCP
-Log '3/8 Deploychan remote MCP'
-if (HasTarget 'codex') {
-    if (Available 'codex') {
-        if ($DryRun) { Log "[dry-run] codex mcp add deploychan --url $Endpoint" }
-        else {
-            if (-not (CodexExists 'deploychan')) {
-                Backup (Join-Path $CodexHome 'config.toml')
-                & codex mcp add deploychan --url $Endpoint
-                if ($LASTEXITCODE -ne 0) { Warn 'Codex MCP registration failed' }
-            } else {
-                $Existing = (& codex mcp get deploychan --json | ConvertFrom-Json)
-                if ($LASTEXITCODE -ne 0 -or $Existing.transport.url -ne $Endpoint) { throw 'Existing Codex Deploychan differs' }
-            }
-            if (-not (CodexExists 'deploychan')) { throw 'Codex Deploychan verification failed' }
-        }
-    } else { Warn 'codex is not on PATH; skipping Codex MCP registration' }
-}
-if (HasTarget 'agy') {
-    $McpPath = Join-Path $HOME '.gemini\config\mcp_config.json'
-    if ($DryRun) { Log "[dry-run] Merge Deploychan into $McpPath" }
-    else {
-        New-Item -ItemType Directory -Path (Split-Path $McpPath -Parent) -Force | Out-Null
-        $Data = if (Test-Path -LiteralPath $McpPath) { [IO.File]::ReadAllText($McpPath, (New-Object Text.UTF8Encoding($false,$true))) | ConvertFrom-Json } else { [pscustomobject]@{} }
-        if ($null -eq $Data -or $Data -is [array]) { throw 'Invalid AGY MCP JSON root' }
-        if (-not $Data.PSObject.Properties['mcpServers']) { $Data | Add-Member -NotePropertyName mcpServers -NotePropertyValue ([pscustomobject]@{}) }
-        if ($null -eq $Data.mcpServers -or $Data.mcpServers -isnot [pscustomobject]) { throw 'Invalid mcpServers section' }
-        $Existing = $Data.mcpServers.PSObject.Properties['deploychan']
-        if ($Existing -and $Existing.Value.serverUrl -ne $Endpoint) { throw 'Existing Deploychan MCP differs; preserving it' }
-        if (-not $Existing) {
-            Backup $McpPath
-            $Data.mcpServers | Add-Member -NotePropertyName deploychan -NotePropertyValue ([pscustomobject]@{serverUrl=$Endpoint}) -Force
-            [System.IO.File]::WriteAllText($McpPath, ($Data | ConvertTo-Json -Depth 60) + "`n", (New-Object System.Text.UTF8Encoding($false)))
-        }
-        $List = & agy mcp list
-        if ($LASTEXITCODE -ne 0 -or -not ($List -match '^deploychan\s')) { throw 'AGY Deploychan registration verification failed' }
-    }
-}
+# 3. Deploychan and Keenable remote MCP
+Log '3/8 Deploychan + Keenable remote MCP'
 function GeminiMcp([string]$Name, [string]$Expected, [string[]]$Arguments) {
     if ($DryRun) { Log "[dry-run] Verify or register Gemini MCP: $Name"; return }
     $Path = Join-Path $HOME '.gemini\settings.json'
@@ -228,7 +192,7 @@ function GeminiMcp([string]$Name, [string]$Expected, [string[]]$Arguments) {
     if ($null -ne $Servers -and $Servers -isnot [pscustomobject]) { throw 'Invalid Gemini mcpServers' }
     $Property = if ($Servers) { $Servers.PSObject.Properties[$Name] } else { $null }
     if ($Property) {
-        $Actual = if ($Name -eq 'deploychan') { if ($Property.Value.url) { $Property.Value.url } else { $Property.Value.httpUrl } } else { $Property.Value.command }
+        $Actual = if ($Name -in @('deploychan','keenable')) { if ($Property.Value.url) { $Property.Value.url } else { $Property.Value.httpUrl } } else { $Property.Value.command }
         if ($Actual -ne $Expected) { throw "Existing Gemini $Name differs; preserving it" }
         if ($Name -eq 'xerj' -and ($Property.Value.args -join '|') -ne ($Arguments[1..($Arguments.Count - 1)] -join '|')) { throw 'Existing Gemini XERJ arguments differ; preserving them' }
     } else {
@@ -239,12 +203,49 @@ function GeminiMcp([string]$Name, [string]$Expected, [string[]]$Arguments) {
         if (-not $Settings.mcpServers.PSObject.Properties[$Name]) { throw "Gemini $Name verification failed" }
     }
 }
-if (HasTarget 'gemini') {
-    if (Available 'gemini') { GeminiMcp 'deploychan' $Endpoint @('--transport','http',$Endpoint) }
-    else { Warn 'gemini is missing; install Gemini CLI first' }
+foreach ($RemoteName in @('deploychan','keenable')) {
+    $Endpoint = if ($RemoteName -eq 'keenable') { 'https://api.keenable.ai/mcp-public' } else { 'https://mcp.deploychan.webcam/mcp' }
+    if (HasTarget 'codex') {
+        if (Available 'codex') {
+            if ($DryRun) { Log "[dry-run] codex mcp add $RemoteName --url $Endpoint" }
+            else {
+                if (-not (CodexExists $RemoteName)) {
+                    Backup (Join-Path $CodexHome 'config.toml')
+                    & codex mcp add $RemoteName --url $Endpoint
+                    if ($LASTEXITCODE -ne 0) { Warn 'Codex MCP registration failed' }
+                } else {
+                    $Existing = (& codex mcp get $RemoteName --json | ConvertFrom-Json)
+                    if ($LASTEXITCODE -ne 0 -or $Existing.transport.url -ne $Endpoint) { throw "Existing Codex $RemoteName differs" }
+                }
+                if (-not (CodexExists $RemoteName)) { throw 'Codex remote MCP verification failed' }
+            }
+        } else { Warn 'codex is not on PATH; skipping Codex MCP registration' }
+    }
+    if (HasTarget 'agy') {
+        $McpPath = Join-Path $HOME '.gemini\config\mcp_config.json'
+        if ($DryRun) { Log "[dry-run] Merge $RemoteName into $McpPath" }
+        else {
+            New-Item -ItemType Directory -Path (Split-Path $McpPath -Parent) -Force | Out-Null
+            $Data = if (Test-Path -LiteralPath $McpPath) { [IO.File]::ReadAllText($McpPath, (New-Object Text.UTF8Encoding($false,$true))) | ConvertFrom-Json } else { [pscustomobject]@{} }
+            if ($null -eq $Data -or $Data -is [array]) { throw 'Invalid AGY MCP JSON root' }
+            if (-not $Data.PSObject.Properties['mcpServers']) { $Data | Add-Member -NotePropertyName mcpServers -NotePropertyValue ([pscustomobject]@{}) }
+            if ($null -eq $Data.mcpServers -or $Data.mcpServers -isnot [pscustomobject]) { throw 'Invalid mcpServers section' }
+            $Existing = $Data.mcpServers.PSObject.Properties[$RemoteName]
+            if ($Existing -and $Existing.Value.serverUrl -ne $Endpoint) { throw 'Existing remote MCP differs; preserving it' }
+            if (-not $Existing) {
+                Backup $McpPath
+                $Data.mcpServers | Add-Member -NotePropertyName $RemoteName -NotePropertyValue ([pscustomobject]@{serverUrl=$Endpoint}) -Force
+                [System.IO.File]::WriteAllText($McpPath, ($Data | ConvertTo-Json -Depth 60) + "`n", (New-Object System.Text.UTF8Encoding($false)))
+            }
+            $List = & agy mcp list
+            if ($LASTEXITCODE -ne 0 -or -not ($List -match ("^" + $RemoteName + "\s"))) { throw 'AGY remote MCP registration verification failed' }
+        }
+    }
+    if (HasTarget 'gemini') {
+        if (Available 'gemini') { GeminiMcp $RemoteName $Endpoint @('--transport','http',$Endpoint) }
+        else { Warn 'gemini is missing; install Gemini CLI first' }
+    }
 }
-
-
 
 # 4. Install checksummed upstream XERJ binary; register its official MCP stdio adapter.
 Log '4/8 XERJ (verified upstream release; no automatic indexing or server startup)'
@@ -351,6 +352,12 @@ $Selector = Join-Path $Root 'skills\aas-skill-selector'
 if (HasTarget 'codex') { CopySkill $Selector (Join-Path $CodexHome 'skills\aas-skill-selector') }
 if (HasTarget 'agy') { CopySkill $Selector (Join-Path $HOME '.gemini\config\skills\aas-skill-selector') }
 if (HasTarget 'gemini') { CopySkill $Selector (Join-Path $HOME '.gemini\skills\aas-skill-selector') }
+
+# Official Keenable skill; preserve existing skills.
+$KeenableSkill = Join-Path $Root 'skills\keenable-cli'
+if (HasTarget 'codex') { CopySkill $KeenableSkill (Join-Path $CodexHome 'skills\keenable-cli') }
+if (HasTarget 'agy') { CopySkill $KeenableSkill (Join-Path $HOME '.gemini\config\skills\keenable-cli') }
+if (HasTarget 'gemini') { CopySkill $KeenableSkill (Join-Path $HOME '.gemini\skills\keenable-cli') }
 
 # Owner's GitHub publication style; preserve existing local skills on reruns.
 $GitHubStyle = Join-Path $Root 'skills\github-markdown-style'

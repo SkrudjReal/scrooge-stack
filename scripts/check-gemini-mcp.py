@@ -14,7 +14,7 @@ try:
         sys.exit(1)
     if not isinstance(entry, dict):
         raise ValueError('invalid MCP entry')
-    actual = entry.get('url', entry.get('httpUrl')) if name == 'deploychan' else entry.get('command')
+    actual = entry.get('url', entry.get('httpUrl')) if name in ('deploychan', 'keenable') else entry.get('command')
     if actual != expected:
         raise ValueError(f'existing {name} differs; preserving it')
     if name == 'xerj' and entry.get('args', []) != []:
