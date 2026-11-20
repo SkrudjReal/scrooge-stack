@@ -29,7 +29,15 @@ function global:graphify {
     [IO.File]::WriteAllText((Join-Path $Skill 'SKILL.md'), "---`nname: graphify`ndescription: auto`n---`nbody`n")
     $global:LASTEXITCODE = 0
 }
-function global:agy { $global:LASTEXITCODE = 0; 'deploychan http'; 'xerj stdio' }
+function global:agy { $global:LASTEXITCODE = 0; 'deploychan http'; 'keenable http'; 'xerj stdio' }
+function global:py {
+    if ($args -match 'install-modern-web.py') {
+        $global:ModernWebTestArgs = @($args)
+        $global:LASTEXITCODE = 0
+        return
+    }
+    throw 'Unexpected Python invocation in isolated installer test'
+}
 try {
     $global:ScroogeGitCalls = 0
     Set-Variable HOME -Value (Join-Path $TestRoot 'home') -Force
@@ -45,6 +53,7 @@ try {
     $Prompt = Join-Path $HOME '.gemini\GEMINI.md'
     [IO.File]::WriteAllText($Prompt, 'Personal instructions')
     & (Join-Path $Root 'install.ps1') -Targets agy -SkipXerj -SkipObsidian
+    if (-not ($global:ModernWebTestArgs -contains 'agy') -or -not ($global:ModernWebTestArgs -contains (Join-Path $env:LOCALAPPDATA 'scrooge-stack'))) { throw 'Modern Web helper arguments missing' }
     $First = [IO.File]::ReadAllText($Config)
     $FirstPrompt = [IO.File]::ReadAllText($Prompt)
     $Data = $First | ConvertFrom-Json
@@ -57,13 +66,17 @@ try {
     if (-not (Get-ChildItem (Split-Path $Config) -Filter 'mcp_config.json.bak.*')) { throw 'MCP backup missing' }
     & (Join-Path $Root 'install.ps1') -Targets agy -SkipXerj -SkipObsidian
     if ([IO.File]::ReadAllText($Config) -ne $First -or [IO.File]::ReadAllText($Prompt) -ne $FirstPrompt) { throw 'Reinstall changed settings' }
-    function global:codex { $global:LASTEXITCODE = 0; '{"transport":{"url":"https://mcp.deploychan.webcam/mcp"}}' }
+    function global:codex {
+        $global:LASTEXITCODE = 0
+        if ($args -contains 'keenable') { '{"transport":{"url":"https://api.keenable.ai/mcp-public"}}' }
+        else { '{"transport":{"url":"https://mcp.deploychan.webcam/mcp"}}' }
+    }
     function global:gemini { $global:LASTEXITCODE = 0 }
     $env:CODEX_HOME = Join-Path $HOME 'custom codex'
     $CodexPrompt = Join-Path $env:CODEX_HOME 'AGENTS.md'
     New-Item -ItemType Directory -Force -Path $env:CODEX_HOME | Out-Null
     [IO.File]::WriteAllText($CodexPrompt, "Owner rules`n<!-- scrooge-stack:begin -->`nOld rules`n<!-- scrooge-stack:end -->`n")
-    [IO.File]::WriteAllText((Join-Path $HOME '.gemini\settings.json'), '{"mcpServers":{"deploychan":{"url":"https://mcp.deploychan.webcam/mcp"}}}')
+    [IO.File]::WriteAllText((Join-Path $HOME '.gemini\settings.json'), '{"mcpServers":{"deploychan":{"url":"https://mcp.deploychan.webcam/mcp"},"keenable":{"url":"https://api.keenable.ai/mcp-public"}}}')
     $StylePaths = @(
         (Join-Path $env:CODEX_HOME 'skills\github-markdown-style\SKILL.md'),
         (Join-Path $HOME '.gemini\config\skills\github-markdown-style\SKILL.md'),
@@ -89,17 +102,24 @@ try {
     }
     if ([IO.File]::ReadAllText($CodexPrompt) -ne $StylePrompt) { throw 'Style prompt reinstall was not idempotent' }
     $env:CODEX_HOME = $null
-    function global:py { $global:ObsidianTestArgs = @($args); $global:LASTEXITCODE = 0 }
+    function global:py {
+        if ($args -match 'install-modern-web.py') { $global:LASTEXITCODE = 0; return }
+        $global:ObsidianTestArgs = @($args); $global:LASTEXITCODE = 0
+    }
     & (Join-Path $Root 'install.ps1') -Targets agy -SkipXerj -ObsidianVault 'C:\Vault with spaces' -ObsidianRepo 'C:\Repo with spaces' -ObsidianWrite
     if (-not ($global:ObsidianTestArgs -contains 'C:\Vault with spaces') -or -not ($global:ObsidianTestArgs -contains 'C:\Repo with spaces') -or -not ($global:ObsidianTestArgs -contains '--enable-writes')) { throw 'Obsidian flag forwarding failed' }
     $BeforeGit = $global:ScroogeGitCalls
     & (Join-Path $Root 'install.ps1') -OnlyObsidian -Targets 'agy,gemini' -ObsidianVault 'C:\Vault with spaces'
     if ($global:ScroogeGitCalls -ne $BeforeGit) { throw 'Obsidian-only setup ran other components' }
     if (-not ($global:ObsidianTestArgs -contains 'agy,gemini')) { throw 'Obsidian-only target forwarding failed' }
-    function global:py { $global:LASTEXITCODE = 7 }
+    function global:py { $global:LASTEXITCODE = if ($args -match 'install-modern-web.py') { 0 } else { 7 } }
     $Failed = $false
     try { & (Join-Path $Root 'install.ps1') -Targets agy -SkipXerj } catch { $Failed = $_.ToString().Contains('Obsidian installation failed') }
     if (-not $Failed) { throw 'Obsidian failure did not stop installer' }
+    function global:py { $global:LASTEXITCODE = 7 }
+    $Failed = $false
+    try { & (Join-Path $Root 'install.ps1') -Targets agy -SkipXerj -SkipObsidian } catch { $Failed = $_.ToString().Contains('Modern Web Guidance installation failed') }
+    if (-not $Failed) { throw 'Modern Web failure did not stop installer' }
     Set-Variable HOME -Value (Join-Path $TestRoot 'failure-home') -Force
     $env:LOCALAPPDATA = Join-Path $HOME 'AppData\Local'
     $env:SCROOGE_TEST_FAIL = 'agentic-awesome-skills'

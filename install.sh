@@ -342,6 +342,12 @@ if has_target codex; then copy_skill_dir "$ROOT/skills/github-markdown-style" "$
 if has_target agy; then copy_skill_dir "$ROOT/skills/github-markdown-style" "$HOME_DIR/.gemini/config/skills/github-markdown-style"; fi
 if has_target gemini; then copy_skill_dir "$ROOT/skills/github-markdown-style" "$HOME_DIR/.gemini/skills/github-markdown-style"; fi
 
+# Modern Web Guidance uses the same native Python helper on Windows and Linux.
+say 'Modern Web Guidance (official Google web platform skill)'
+modern_web_args=(--targets "$TARGETS" --data-dir "$DATA_DIR")
+if ((DRY_RUN)); then modern_web_args+=(--dry-run); fi
+python3 "$ROOT/scripts/install-modern-web.py" "${modern_web_args[@]}" || warn 'Modern Web Guidance installation failed'
+
 # 6. ShellCheck checks shell scripts and is installed from Ubuntu's package repository.
 say '6/10 ShellCheck'
 if command -v shellcheck >/dev/null; then

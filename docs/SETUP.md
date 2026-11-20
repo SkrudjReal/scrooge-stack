@@ -30,7 +30,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1 -Targets codex
 .\install.ps1 -Targets codex -ObsidianVault 'C:\Users\you\Documents\My Vault' -ObsidianWrite
 ```
 
-The ordered steps are Ponytail, Graphify, Deploychan, XERJ, AAS, ShellCheck and Oh My Zsh (Linux/WSL only), Obsidian, global instructions, then Choirboy. A failure stops the run; previously completed steps are not rolled back automatically. Correct the error and rerun. Dry-run prints intended actions without applying changes; it does not prove a download, CLI registration, or endpoint will work.
+The ordered steps are Ponytail, Graphify, Deploychan, XERJ, AAS, Modern Web Guidance, ShellCheck and Oh My Zsh (Linux/WSL only), Obsidian, global instructions, then Choirboy. A failure stops the run; previously completed steps are not rolled back automatically. Correct the error and rerun. Dry-run prints intended actions without applying changes; it does not prove a download, CLI registration, or endpoint will work.
 
 On Ubuntu/WSL, an existing ShellCheck is reused; otherwise the installer runs `sudo apt-get install -y shellcheck` (or `apt-get` as root). This may request the administrator password. If package lists are stale, run `sudo apt-get update` and retry. Check shell scripts with `shellcheck install.sh scripts/*.sh`. ShellCheck also runs on Windows when installed separately, but it checks shell scripts, not PowerShell; the PowerShell installer does not install it.
 
@@ -129,6 +129,33 @@ If a selected CLI or prerequisite is missing, install it and rerun. A failed clo
 The repository includes isolated Linux tests and a Windows PowerShell 5.1 mocked integration test; run `python3 -m unittest discover -s tests -v` and `powershell -NoProfile -File .\tests\windows-integration.ps1`. Their coverage does not prove real installations of every upstream version or architecture. ARM64, PowerShell 7, complete real Windows installations, and live Gemini CLI connections need platform-specific verification. Real Codex and AGY configuration discovery and XERJ MCP initialization were checked in isolated Linux homes; other installer dependencies in those runs were mocked. Most upstream Git checkouts are not version pinned; Obsidian pins are documented above. Review upstream content and update policy. No background service or custom MCP server is supplied.
 
 The original single archived-skill installer remains available as `scripts/install-archived-skill.sh`; see [skills/README.md](../skills/README.md). Attribution and licenses of upstream components remain with their respective authors.
+
+## Modern Web Guidance
+
+Both installers run the shared `scripts/install-modern-web.py` helper before Obsidian and Choirboy. It clones the [official distribution](https://github.com/GoogleChrome/modern-web-guidance), checks its origin on reruns, and copies the `modern-web-guidance` skill, bundled guides and upstream license to each selected agent's existing skills location. Existing skill directories are preserved. No MCP server, browser, agent plugin hooks or experimental feature opt-ins are added. Python 3.9+, Node.js 22+ and npm/npx are required; the skill invokes the upstream CLI with `npx` and may download its current release on first use.
+
+Install just this component, without rerunning the rest of the stack:
+
+```bash
+python3 scripts/install-modern-web.py --targets codex,agy --dry-run
+python3 scripts/install-modern-web.py --targets codex,agy
+```
+
+```powershell
+py -3 scripts/install-modern-web.py --targets codex,agy --dry-run
+py -3 scripts/install-modern-web.py --targets codex,agy
+```
+
+Restart agents to discover the skill. It applies to HTML, CSS and browser JavaScript tasks. Browser support defaults to Baseline Widely available unless the project specifies another target. Check the real CLI separately from installation:
+
+```bash
+npx -y modern-web-guidance@latest search "light dismiss dialog"
+npx -y modern-web-guidance@latest retrieve light-dismiss-a-dialog
+```
+
+Use `npx.cmd` in Windows PowerShell if script execution policy blocks `npx.ps1`. A search must return relevant IDs; retrieval must return the selected guide and compatibility information. These checks prove CLI operation, not that an already running agent has discovered the new skill. Upstream CLI telemetry can be disabled with `DISABLE_TELEMETRY=1`; see the [upstream privacy notes](https://github.com/GoogleChrome/modern-web-guidance#-telemetry--privacy).
+
+As with the other skill sources, reruns reuse the checkout and preserve installed skills rather than update them. To update, review upstream changes, update the clean source checkout, back up the installed skill and deliberately replace only that skill. To roll back, remove only the newly installed `modern-web-guidance` directories and its source checkout; no agent configuration is changed.
 
 ## Keenable web search
 

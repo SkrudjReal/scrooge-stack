@@ -27,6 +27,10 @@ p=pathlib.Path(sys.argv[-1]); (p/'.git').mkdir(parents=True)
 (p/'.mock-origin').write_text(sys.argv[-2])
 if 'ponytail' in str(p) or 'agentic-awesome-skills' in str(p):
  q=p/'skills'/'example'; q.mkdir(parents=True); (q/'SKILL.md').write_text('---\\nname: example\\ndescription: auto activate\\n---\\nBody\\n')
+if 'modern-web-guidance' in str(p):
+ q=p/'skills'/'modern-web-guidance'; (q/'guides').mkdir(parents=True)
+ (q/'SKILL.md').write_text('Google web skill'); (q/'guides/dialog.md').write_text('Dialog guide')
+ (p/'LICENSE').write_text('Upstream license')
 ''')
         self.mock('graphify', '''#!/usr/bin/env python3
 import os, pathlib
@@ -36,6 +40,9 @@ p=pathlib.Path(os.environ['HOME'])/'.codex/skills/graphify'; p.mkdir(parents=Tru
         self.mock('zsh', '#!/bin/sh\nexit 0\n')
         self.mock('agy', '#!/bin/sh\nprintf "deploychan  http\\nkeenable  http\\nxerj  stdio\\n"\n')
         self.mock('shellcheck', '#!/bin/sh\nexit 0\n')
+        self.mock('node', '#!/bin/sh\nprintf "v22.12.0\\n"\n')
+        self.mock('npm', '#!/bin/sh\nexit 0\n')
+        self.mock('npx', '#!/bin/sh\nexit 0\n')
         self.env = dict(os.environ, HOME=str(self.home), XDG_DATA_HOME=str(self.home / '.local/share'), PATH=str(self.bin) + os.pathsep + os.environ['PATH'])
         self.env.pop('CODEX_HOME', None)
         self.env.pop('ZSH_CUSTOM', None)
@@ -142,6 +149,21 @@ assert pathlib.Path(sys.argv[1]).name == 'install-obsidian.py'
         env = dict(self.env, TEST_FAIL_URL='agentic-awesome-skills')
         result = self.run_installer('--skip-zsh', env=env)
         self.assertNotEqual(result.returncode, 0)
+        self.assertNotIn('10/10 Choirboy', result.stdout)
+
+    def test_modern_web_install_preserves_skill_and_failure_stops(self):
+        result = self.run_installer('--skip-zsh')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        skill = self.home / '.gemini/config/skills/modern-web-guidance/SKILL.md'
+        self.assertEqual(skill.read_text(), 'Google web skill')
+        skill.write_text('Owner version')
+        result = self.run_installer('--skip-zsh')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(skill.read_text(), 'Owner version')
+        self.mock('node', '#!/bin/sh\nprintf "v20.0.0\\n"\n')
+        result = self.run_installer('--skip-zsh')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Modern Web Guidance installation failed', result.stderr)
         self.assertNotIn('10/10 Choirboy', result.stdout)
 
     def test_github_style_installs_for_all_hosts_and_preserves_local_edits(self):

@@ -9,6 +9,7 @@ Scrooge Stack integrates existing upstream projects, not a proprietary MCP serve
 | KISA Deploychan | https://github.com/howdeploy/deploychan_mcp | Remote technical catalog |
 | XERJ | https://github.com/xerj-org/xerj | Local search and native MCP |
 | AAS | https://github.com/sickn33/agentic-awesome-skills | Skill library; selector maintained in this repository |
+| Modern Web Guidance | https://github.com/GoogleChrome/modern-web-guidance | Official web platform skill and searchable compatibility-aware guides; Node.js 22+ |
 | ShellCheck | https://www.shellcheck.net/ | Shell script analysis; installed on Ubuntu/WSL |
 | Oh My Zsh | https://github.com/ohmyzsh/ohmyzsh | Linux/WSL shell |
 | Choirboy | https://github.com/howdeploy/choirboy-prompt | User-owned project context, staged last |

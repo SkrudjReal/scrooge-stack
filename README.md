@@ -27,6 +27,7 @@ Scrooge Stack sets up skills, MCP integrations and global instructions for **Cod
 | :--- | :--- | :--- |
 | ✦ Workflow | [Ponytail](https://github.com/DietrichGebert/ponytail), [AAS](https://github.com/sickn33/agentic-awesome-skills) | Focused skills and task-based selection |
 | ◇ Web search | [Keenable](https://docs.keenable.ai/) | Primary web search and page fetch via remote MCP, with the official skill |
+| ✧ Web development | [Modern Web Guidance](https://developer.chrome.com/docs/modern-web-guidance) | Google's web platform skill, searchable guides and browser compatibility guidance |
 | ◇ Search | [Graphify](https://github.com/Graphify-Labs/graphify), [XERJ](https://github.com/xerj-org/xerj), [Deploychan](https://github.com/howdeploy/deploychan_mcp) | Knowledge graphs, local search and a technical catalog |
 | ✧ Knowledge | [MCPVault](https://github.com/bitbonsai/mcpvault), [ObsidianDataWeave](https://github.com/howdeploy/ObsidianDataWeave), [Choirboy](https://github.com/howdeploy/choirboy-prompt) | Obsidian workflows and optional personal context |
 | ⌘ Environment | [ShellCheck](https://www.shellcheck.net/), [Oh My Zsh](https://github.com/ohmyzsh/ohmyzsh) | Shell checks and optional Ubuntu/WSL configuration |
@@ -42,6 +43,7 @@ Install **Git and your selected agent CLIs** first. Choose only the agents you h
 | :--- | :--- |
 | Ubuntu / WSL | Python 3, curl, tar, sha256sum; Graphify or uv/pipx; zsh unless skipped |
 | Windows 10/11 | PowerShell 5.1+, Git and the selected agent CLIs |
+| Modern Web Guidance | Python 3.9+, Node.js 22+ and npm (including npx) |
 | Obsidian integration | Python 3.11+ with venv/pip, Node.js 22.12+ with npm, an existing vault |
 
 **Ubuntu / WSL**

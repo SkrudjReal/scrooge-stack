@@ -365,6 +365,18 @@ if (HasTarget 'codex') { CopySkill $GitHubStyle (Join-Path $CodexHome 'skills\gi
 if (HasTarget 'agy') { CopySkill $GitHubStyle (Join-Path $HOME '.gemini\config\skills\github-markdown-style') }
 if (HasTarget 'gemini') { CopySkill $GitHubStyle (Join-Path $HOME '.gemini\skills\github-markdown-style') }
 
+# Modern Web Guidance uses the same native Python helper as Linux.
+Log 'Modern Web Guidance (official Google web platform skill)'
+$ModernWebArgs = @((Join-Path $Root 'scripts\install-modern-web.py'), '--targets', $Targets,
+    '--data-dir', (Split-Path $DataDir -Parent))
+if ($DryRun) { $ModernWebArgs += '--dry-run'; Log ('[dry-run] Python ' + ($ModernWebArgs -join ' ')) }
+else {
+    if (Available 'py') { & py -3 @ModernWebArgs }
+    elseif (Available 'python') { & python @ModernWebArgs }
+    else { throw 'Modern Web Guidance requires Python 3.9+ and Node.js 22+ with npm/npx' }
+    if ($LASTEXITCODE -ne 0) { throw 'Modern Web Guidance installation failed' }
+}
+
 # 6. Same portable helper as Linux; native Python, no Bash or REST API required.
 Log '6/8 Obsidian (MCPVault + DataWeave + FTS5)'
 if (-not $SkipObsidian) { InstallObsidian }
