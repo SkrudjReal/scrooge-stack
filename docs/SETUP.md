@@ -146,7 +146,7 @@ py -3 scripts/install-modern-web.py --targets codex,agy --dry-run
 py -3 scripts/install-modern-web.py --targets codex,agy
 ```
 
-Restart agents to discover the skill. It applies to HTML, CSS and browser JavaScript tasks. Browser support defaults to Baseline Widely available unless the project specifies another target. Check the real CLI separately from installation:
+Restart agents to load updated global instructions. Both platform prompts explicitly require loading `modern-web-guidance/SKILL.md` for every task that writes or changes web UI, HTML, CSS or browser JavaScript, including framework components. The agent must search and retrieve matching guides before implementation and check its changes against them afterwards, without waiting for an explicit request. Backend-only, infrastructure and documentation-only tasks are excluded. This is an agent instruction, not a tool hook that mechanically enforces every invocation. Browser support defaults to Baseline Widely available unless the project specifies another target. Check the real CLI separately from installation:
 
 ```bash
 npx -y modern-web-guidance@latest search "light dismiss dialog"
