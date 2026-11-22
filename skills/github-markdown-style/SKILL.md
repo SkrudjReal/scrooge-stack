@@ -1,6 +1,6 @@
 ---
 name: github-markdown-style
-description: Apply the owner's approved GitHub Markdown layout and check portability and depersonalization before every agent-driven GitHub push, including requests to «унифицируй» or «деперсонализируй», and when creating repositories or preparing GitHub-facing Markdown.
+description: Apply the owner's approved GitHub Markdown layout and check portability and depersonalization before every agent-driven GitHub push, including requests to standardize or depersonalize a project, and when creating repositories or preparing GitHub-facing Markdown.
 ---
 
 # GitHub Markdown style
@@ -29,17 +29,17 @@ instructions. If unavailable, use the style rules below and briefly disclose the
 fallback; do not block an otherwise authorized push just because the reference
 cannot be fetched.
 
-## Unify and depersonalize before publication
+## Standardize and depersonalize before publication
 
 On every GitHub push, inspect the outgoing changes for portability and personal
 data, even when the user does not repeat these requests:
 
-- **«Унифицируй» (unify):** use the project's existing shared configuration and
+- **Standardize:** use the project's existing shared configuration and
   conventions instead of machine-specific duplicates. Replace accidental
   hardcoded usernames, home paths and local service addresses with portable
   defaults, configuration or documented placeholders. Keep working local values
   outside the published files.
-- **«Деперсонализируй» (depersonalize):** remove private account details, personal
+- **Depersonalize:** remove private account details, personal
   prompts and real private targets from published examples and defaults. Use
   neutral examples such as `example.com`; preserve intentional project branding,
   public repository links, attribution and licenses.
