@@ -1,62 +1,62 @@
-# Suno Music Generation — ГОТОВ К РАБОТЕ ✅
+# Suno Music Generation — READY TO USE ✅
 
-## Использование
+## Usage
 
-Пользователь просто пишет что хочет, я автоматически:
-1. Определяю жанр и настроение
-2. Генерирую промпт
-3. Создаю трек
-4. Отправляю в Telegram
+The user simply describes what they want; I automatically:
+1. Determine the genre and mood
+2. Generate a prompt
+3. Create a track
+4. Send it to Telegram
 
-## Примеры запросов
+## Example requests
 
-**Lo-fi спокойный:**
-> "создай трек лоу-фай спокойный вечерний"
+**Calm lo-fi:**
+> "create a calm evening lo-fi track"
 → `lo-fi, calm and peaceful, soft pads, 75 BPM, high quality`
 
-**Электроника энергичная:**
-> "хочу энергичную электронику для кодинга"
+**Energetic electronic music:**
+> "I want energetic electronic music for coding"
 → `electronic, energetic, upbeat, 120 BPM, high quality`
 
-**Славянский фолк:**
-> "музыку со славянскими мотивами и хором"
+**Slavic folk:**
+> "music with Slavic motifs and a choir"
 → `Slavic folk, choir vocals, electronic, 100 BPM, high quality`
 
-**Ambient медитативный:**
-> "атмосферная музыка для медитации"
+**Meditative ambient:**
+> "atmospheric music for meditation"
 → `ambient, atmospheric, calm and peaceful, soft pads, 80 BPM`
 
-## Автоматическое определение
+## Automatic detection
 
-Скилл распознает ключевые слова:
-- **Жанр:** lo-fi, электроника, славянский, ambient
-- **Настроение:** спокойный, меланхоличный, энергичный
-- **BPM:** автоматически подбирается (75-120)
+The skill recognizes keywords:
+- **Genre:** lo-fi, electronic, Slavic, ambient
+- **Mood:** calm, melancholic, energetic
+- **BPM:** selected automatically (75-120)
 
-## Технические детали
+## Technical details
 
 **API:** EvoLink Suno V5
-**Timeout:** 6 минут (на случай очереди)
-**Формат:** MP3, ~3MB, 2 минуты
-**Время генерации:** ~1-2 минуты
+**Timeout:** 6 minutes (in case of a queue)
+**Format:** MP3, ~3MB, 2 minutes
+**Generation time:** ~1-2 minutes
 
-## Файлы
+## Files
 
-- `generate.py` — низкоуровневая генерация (прямой API вызов)
-- `suno.js` — обертка с автоматическим промптом
-- `.env` — API ключ (защищен)
-- `test.py` — тестовый скрипт
+- `generate.py` — low-level generation (direct API call)
+- `suno.js` — wrapper with automatic prompting
+- `.env` — API key (protected)
+- `test.py` — test script
 
-## Тест
+## Test
 
 ```bash
-cd ~/.claude/skills/suno-music   # или ~/.codex/skills/suno-music
+cd ~/.claude/skills/suno-music   # or ~/.codex/skills/suno-music
 python3 generate.py "lo-fi electronic, calm, 75 BPM"
 ```
 
-## Статус: ✅ РАБОТАЕТ
+## Status: ✅ WORKING
 
-- ✅ API полностью функционален
-- ✅ Генерация стабильная (~2 минуты)
-- ✅ Автоматические промпты
-- ✅ Отправка в Telegram
+- ✅ Fully functional API
+- ✅ Stable generation (~2 minutes)
+- ✅ Automatic prompts
+- ✅ Telegram delivery
